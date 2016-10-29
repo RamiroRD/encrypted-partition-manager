@@ -3,21 +3,40 @@
 
 #include <sys/types.h>
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <atomic>
 
 
 
-// TODO: definir what() y/o juntar excepciones.
-struct NoSuchDeviceException          :  std::exception{};
-struct DeviceNotOpenException         :  std::exception{};
-struct PermissionDeniedException      :  std::exception{};
-struct ExternalErrorException         :  std::exception{};
-struct PartitionStillMountedException :  std::exception{};
-struct IOExceptionMountedException    :  std::exception{};
-struct InvalidStateException          :  std::exception{};
-struct PartitionNotFoundException     :  std::exception{};
+struct CommandError : public std::runtime_error
+{
+    CommandError(const std::string &cmd) : std::runtime_error(cmd){};
+    CommandError(const char* &cmd) : std::runtime_error(cmd){};
+};
+struct SysCallError : public std::exception
+{
+    
+    SysCallError(const char * cmd, int exitCode)
+    {
+        mWhat += "Syscall: \"";
+        mWhat += cmd;
+        mWhat += "\". Codigo de retorno: ";
+        mWhat += exitCode;
+    }
+    SysCallError(const std::string &cmd, int exitCode)
+    {
+        SysCallError(cmd.c_str(),exitCode);
+    }
+
+    const char * what() const noexcept
+    {
+        return mWhat.c_str();
+    }
+    private:
+    std::string mWhat;
+};
+struct PartitionNotFoundException : public std::exception{};
 
 class PartitionManager
 {
@@ -31,6 +50,7 @@ public:
     void MountPartition (const std::string &password);
     void UnmountPartition();
     unsigned char getProgress() const;
+    static constexpr unsigned short SLOTS_AMOUNT = 8192;
 private:
     // Ambos en bloques 
     off_t mDeviceSize;
@@ -43,9 +63,8 @@ private:
     void createWraparound();
     bool logicalDeviceExists(const std::string&);
     bool isMountPoint(const std::string& dirPath);
-    
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    static constexpr unsigned short SLOTS_AMOUNT = 8192;
+    
     // Workaround al bug 54483 de gcc.
     const off_t MAX_TRANSFER_SIZE = 1000;
     static constexpr const char * WRAPAROUND_DEVICE_NAME = "wraparound";

@@ -71,7 +71,6 @@ int main()
             std::cout << "0. Salir" << std::endl;
             std::cout << "Opción: ";
             std::cin >> choice;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
             switch(choice)
             {
             case 0:

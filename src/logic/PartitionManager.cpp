@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <stdexcept>
 #include <cassert>
 #include <cstdio>
 
@@ -42,7 +41,6 @@ PartitionManager::PartitionManager(const std::string &device)
      */
     try
     {
-        std::cerr << "Intentando abrir  " << device << " ..." << std::endl;
         std::fstream dev;
         dev.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         dev.open(device.c_str(), std::ios_base::binary | std::ios_base::in);
@@ -55,7 +53,7 @@ PartitionManager::PartitionManager(const std::string &device)
     catch (std::ifstream::failure e)
     {
         std::cerr << e.what();
-        throw NoSuchDeviceException();
+        throw std::domain_error("No existe tal dispositivo.");
     }
 
     std::cerr << "El dispositivo tiene " << mDeviceSize << " bloques."
@@ -88,7 +86,7 @@ void PartitionManager::createWraparound()
 
     std::cerr << "Creando wraparound ..." << std::endl;
     if (pclose(stream) != 0)
-        throw ExternalErrorException();
+        throw CommandError("dmsetup create wraparound");
 }
 
 // dirPath sin la barra!
@@ -124,7 +122,7 @@ void PartitionManager::openCryptMapping(const unsigned short slot,
     fputc('\n', stream);
     free(cmd);
     if (pclose(stream) != 0)
-        throw ExternalErrorException();
+        throw CommandError(cmd);
 }
 
 void PartitionManager::closeMapping(const std::string &logicalDevice)
@@ -144,6 +142,9 @@ unsigned char PartitionManager::getProgress() const
 
 void PartitionManager::WipeVolume()
 {
+    if(isMountPoint(MOUNT_POINT))
+        throw std::logic_error("Hay una partición montada.");
+
     std::ifstream random;
     random.open("/dev/urandom", std::ios_base::binary | std::ios_base::in);
     random.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -180,7 +181,7 @@ void PartitionManager::CreatePartition(const unsigned short slot,
                                        const std::string &password)
 {
     if (isMountPoint(MOUNT_POINT))
-        throw InvalidStateException();
+        throw std::logic_error("Hay una partición montada.");
     if (slot > SLOTS_AMOUNT)
         throw std::domain_error("Número de slot fuera de rango.");
     if (password.empty())
@@ -193,7 +194,7 @@ void PartitionManager::CreatePartition(const unsigned short slot,
     cmd += MAPPINGS_FOLDER_PATH;
     cmd += ENCRYPTED_DEVICE_NAME;
     if(system(cmd.c_str())!=0)
-        throw ExternalErrorException();
+        throw CommandError(cmd);
     if (!opendir(MOUNT_POINT))
         mkdir(MOUNT_POINT, 0777);
     std::string encryptedPath = MAPPINGS_FOLDER_PATH;
@@ -210,7 +211,7 @@ void PartitionManager::MountPartition(const std::string &password)
      * mapping del cifrado también está andando. Falla en tal caso.
      */
     if (isMountPoint(MOUNT_POINT))
-        throw PartitionStillMountedException();
+        throw std::logic_error("Partición todavía montada.");
 
     /*
      * Cerramos el mapping de cifrado en cada vuelta y volvemos a abrir con 
@@ -242,22 +243,13 @@ void PartitionManager::MountPartition(const std::string &password)
 
 void PartitionManager::UnmountPartition()
 {
+    int exitCode;
     if (!isMountPoint(MOUNT_POINT))
-        throw InvalidStateException();
+        throw std::logic_error("No hay partición montada.");
 
-    if (umount(MOUNT_POINT) != 0)
-    {
-        switch (errno)
-        {
-        case EPERM:
-            throw PermissionDeniedException();
-        case EINVAL:
-            assert(false);
-            break; //Esto no debería pasar con el chequeo anterior
-        default:
-            throw ExternalErrorException();
-        }
-    }
+    if ((exitCode = umount(MOUNT_POINT)) != 0)
+        throw SysCallError("umount falló.",exitCode);
+
     rmdir(MOUNT_POINT);
     closeMapping(ENCRYPTED_DEVICE_NAME);
 }
