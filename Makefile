@@ -5,7 +5,7 @@ BDIR=bin/
 TDIR=tests/
 
 CC=g++
-CFLAGS=-std=c++14  -s -lpthread -O0 -Wall -I $(IDIR)
+CFLAGS=-std=c++14  -g -lpthread -O0 -Wall -I $(IDIR)
 
 	
 $(TDIR)partition_manager_test: $(TDIR)partition_manager_test.cpp \
