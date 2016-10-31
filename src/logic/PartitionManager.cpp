@@ -39,25 +39,33 @@ PartitionManager::PartitionManager(const std::string &device)
      * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
      * una excepción que debería manejarse desde el caller del constructor.
      */
-    try
-    {
-        std::fstream dev;
-        dev.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        dev.open(device.c_str(), std::ios_base::binary | std::ios_base::in);
-        dev.seekg(0, std::ios_base::end);
-        assert(dev.tellg() % BLOCK_SIZE_ == 0);
-        mDeviceSize = dev.tellg() / BLOCK_SIZE_;
-        mOffsetMultiple = mDeviceSize / SLOTS_AMOUNT;
-        dev.close();
-    }
-    catch (std::ifstream::failure e)
-    {
-        std::cerr << e.what();
-        throw std::domain_error("No existe tal dispositivo.");
-    }
 
-    std::cerr << "El dispositivo tiene " << mDeviceSize << " bloques."
-              << std::endl;
+     int fd = open(device.c_str(),O_RDWR);
+     if(fd == -1)
+     {
+        if(errno == ENOENT)
+            throw std::domain_error("No existe tal dispositivo.");
+        else if (errno == EPERM)
+            throw std::runtime_error("Permiso denegado.");
+        else
+            throw std::runtime_error("Error desconocido al abrir dispositivo.");
+     }else{
+        struct stat fileStat;
+        unsigned long long size;
+        fstat(fd,&fileStat);
+        if(!S_ISBLK(fileStat.st_mode))
+            throw std::domain_error("El archivo no es un archivo de bloque!");
+        if(ioctl(fd, BLKGETSIZE64, &size)==-1)
+            throw SysCallError("ioctl BLKGETSIZE64",errno);
+        
+        mDeviceSize = size/BLOCK_SIZE_;
+        mOffsetMultiple = mDeviceSize / SLOTS_AMOUNT;
+        std::cerr << "El dispositivo tiene " << mDeviceSize << " bloques."
+                << std::endl;
+     }
+
+     
+
 
     /*
      * Ver que exista el wraparound y crearlo si no existe.

@@ -22,7 +22,7 @@ struct SysCallError : public std::exception
         mWhat += "Syscall: \"";
         mWhat += cmd;
         mWhat += "\". Codigo de retorno: ";
-        mWhat += exitCode;
+        mWhat += std::to_string(exitCode);
     }
     SysCallError(const std::string &cmd, int exitCode)
     {
