@@ -44,28 +44,25 @@ PartitionManager::PartitionManager(const std::string &device)
      if(fd == -1)
      {
         if(errno == ENOENT)
-            throw std::domain_error("No existe tal dispositivo.");
-        else if (errno == EPERM)
-            throw std::runtime_error("Permiso denegado.");
+            throw std::domain_error("No such device.");
+        else if (errno == EPERM || errno == EACCES)
+            throw std::runtime_error("Permission denied.");
         else
-            throw std::runtime_error("Error desconocido al abrir dispositivo.");
+            throw std::runtime_error("Unknown error when opening device block file.");
      }else{
         struct stat fileStat;
         unsigned long long size;
         fstat(fd,&fileStat);
         if(!S_ISBLK(fileStat.st_mode))
-            throw std::domain_error("El archivo no es un archivo de bloque!");
+            throw std::domain_error("Not a block file!");
         if(ioctl(fd, BLKGETSIZE64, &size)==-1)
             throw SysCallError("ioctl BLKGETSIZE64",errno);
         
         mDeviceSize = size/BLOCK_SIZE_;
         mOffsetMultiple = mDeviceSize / SLOTS_AMOUNT;
-        std::cerr << "El dispositivo tiene " << mDeviceSize << " bloques."
+        std::cerr << device << " has" << mDeviceSize << " blocks."
                 << std::endl;
      }
-
-     
-
 
     /*
      * Ver que exista el wraparound y crearlo si no existe.
@@ -74,7 +71,7 @@ PartitionManager::PartitionManager(const std::string &device)
     path += WRAPAROUND_DEVICE_NAME;
     if (!fileExists(path))
     {
-        std::cerr << "Wraparound no existe." << std::endl;
+        std::cerr << "Wraparound device not open." << std::endl;
         createWraparound();
     }
 }
@@ -92,7 +89,7 @@ void PartitionManager::createWraparound()
     std::string input = table.str();
     fwrite(input.c_str(), 1, input.size(), stream);
 
-    std::cerr << "Creando wraparound ..." << std::endl;
+    std::cerr << "Opening wraparound ..." << std::endl;
     if (pclose(stream) != 0)
         throw CommandError("dmsetup create wraparound");
 }
@@ -151,7 +148,7 @@ unsigned char PartitionManager::getProgress() const
 void PartitionManager::WipeVolume()
 {
     if(isMountPoint(MOUNT_POINT))
-        throw std::logic_error("Hay una partición montada.");
+        throw std::logic_error("A partition is already mounted");
 
     std::ifstream random;
     random.open("/dev/urandom", std::ios_base::binary | std::ios_base::in);
@@ -163,7 +160,7 @@ void PartitionManager::WipeVolume()
     out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     out.open(path, std::ios_base::binary | std::ios_base::out);
 
-    std::cerr << "Wipeando volumen..." << std::endl;
+    std::cerr << "Wiping volume..." << std::endl;
 
     char buffer[BLOCK_SIZE_ * MAX_TRANSFER_SIZE];
     for (off_t i = 0; i < mDeviceSize;)
@@ -182,18 +179,17 @@ void PartitionManager::WipeVolume()
     }
     mProgress = 100;
     // TODO: posiblemente atrapar excepciones?
-    std::cerr << "Volumen wipeado!" << std::endl;
 }
 
 void PartitionManager::CreatePartition(const unsigned short slot,
                                        const std::string &password)
 {
     if (isMountPoint(MOUNT_POINT))
-        throw std::logic_error("Hay una partición montada.");
+        throw std::logic_error("Partition is already mounted");
     if (slot > SLOTS_AMOUNT)
-        throw std::domain_error("Número de slot fuera de rango.");
+        throw std::domain_error("Slot number out of range");
     if (password.empty())
-        throw std::domain_error("Contraseña vacía.");
+        throw std::domain_error("Empty password");
     
     closeMapping(ENCRYPTED_DEVICE_NAME);
     openCryptMapping(slot,password);
@@ -219,13 +215,13 @@ void PartitionManager::MountPartition(const std::string &password)
      * mapping del cifrado también está andando. Falla en tal caso.
      */
     if (isMountPoint(MOUNT_POINT))
-        throw std::logic_error("Partición todavía montada.");
+        throw std::logic_error("Partition is already mounted");
 
     /*
      * Cerramos el mapping de cifrado en cada vuelta y volvemos a abrir con 
      * las password pasada hasta poder montar un sistema de archivos FAT. 
      */
-    std::cerr << "Buscando partición..." << std::endl;
+    std::cerr << "Searching partition..." << std::endl;
     if (!opendir(MOUNT_POINT))
         mkdir(MOUNT_POINT, 0777);
     bool success = false;
@@ -253,10 +249,10 @@ void PartitionManager::UnmountPartition()
 {
     int exitCode;
     if (!isMountPoint(MOUNT_POINT))
-        throw std::logic_error("No hay partición montada.");
+        throw std::logic_error("No mounted partition");
 
     if ((exitCode = umount(MOUNT_POINT)) != 0)
-        throw SysCallError("umount falló.",exitCode);
+        throw SysCallError("Unmount failed",exitCode);
 
     rmdir(MOUNT_POINT);
     closeMapping(ENCRYPTED_DEVICE_NAME);
