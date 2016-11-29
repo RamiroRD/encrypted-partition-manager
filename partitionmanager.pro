@@ -13,10 +13,15 @@ SOURCES += src/main.cpp \
     src/gui/PartitionManagerWindow.cpp \
     src/gui/PartitionManagerAdapter.cpp \
     src/gui/CreateDialog.cpp
-    src/logic/PartitionManager.h
+
 
 HEADERS  += \
     include/gui/PartitionManagerWindow.h \
     include/gui/PartitionManagerAdapter.h \
     include/gui/CreateDialog.h \
-    include/logic/PartitionManager.h
+
+unix {
+SOURCES += src/logic/PartitionManager.cpp
+HEADERS += include/logic/PartitionManager.h
+}
+
