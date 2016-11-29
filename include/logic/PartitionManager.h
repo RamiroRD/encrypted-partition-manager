@@ -6,13 +6,14 @@
 #include <stdexcept>
 #include <string>
 #include <atomic>
+#include <mutex>
 
 
 
 struct CommandError : public std::runtime_error
 {
     CommandError(const std::string &cmd) : std::runtime_error(cmd){};
-    CommandError(const char* &cmd) : std::runtime_error(cmd){};
+    CommandError(const char *cmd) : std::runtime_error(cmd){};
 };
 struct SysCallError : public std::exception
 {
@@ -53,18 +54,21 @@ public:
     static constexpr unsigned short SLOTS_AMOUNT = 8192;
 private:
     // Ambos en bloques 
-    off_t mDeviceSize;
-    off_t mOffsetMultiple;
-    std::string mCurrentDevice;
-    std::atomic<unsigned char> mProgress;
+    off_t                       mDeviceSize;
+    off_t                       mOffsetMultiple;
+    std::string                 mCurrentDevice;
+    std::atomic<unsigned char>  mProgress;
+    std::atomic<bool>           mOperationCanceled;
+    std::mutex                  mGuard;
+
     void closeMapping(const std::string&);
     void openCryptMapping(const unsigned short slot,
                           const std::string &password);
     void createWraparound();
     bool logicalDeviceExists(const std::string&);
     bool isMountPoint(const std::string& dirPath);
+
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    
     // Workaround al bug 54483 de gcc.
     const off_t MAX_TRANSFER_SIZE = 1000;
     static constexpr const char * WRAPAROUND_DEVICE_NAME = "wraparound";

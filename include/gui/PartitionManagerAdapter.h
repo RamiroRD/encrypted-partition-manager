@@ -1,7 +1,11 @@
 #ifndef PARTITIONMANAGERADAPTER_H
 #define PARTITIONMANAGERADAPTER_H
 
+#include <memory>
+
 #include <QObject>
+
+#include <include/logic/PartitionManager.h>
 
 
 
@@ -28,12 +32,7 @@ Q_DECLARE_METATYPE(State)
 class PartitionManagerAdapter : public QObject
 {
     Q_OBJECT
-
-
-
 public:
-
-
     explicit PartitionManagerAdapter(QObject *parent = 0);
 
 signals:
@@ -51,6 +50,7 @@ private:
     std::string currentDevice;
     State currentState;
     short int currentProgress;
+    std::unique_ptr<PartitionManager> pm;
 };
 
 

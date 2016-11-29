@@ -14,7 +14,8 @@ void PartitionManagerAdapter::setDevice(const QString &devName)
 {
     currentDevice = devName.toStdString();
     emit stateChanged(currentState = State::Busy);
-    QThread::sleep(1);
+    pm.reset(new PartitionManager(currentDevice));
+    pm.reset(nullptr);
     emit stateChanged(currentState = State::PartitionUnmounted);
 }
 
