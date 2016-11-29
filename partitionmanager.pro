@@ -25,3 +25,4 @@ SOURCES += src/logic/PartitionManager.cpp
 HEADERS += include/logic/PartitionManager.h
 }
 
+TRANSLATIONS = partmgr_es.ts
