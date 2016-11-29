@@ -1,3 +1,4 @@
 *.o
 *.sym
+*.user
 bin/
