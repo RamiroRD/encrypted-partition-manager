@@ -15,30 +15,30 @@ void PartitionManagerAdapter::setDevice(const QString &devName)
     currentDevice = devName.toStdString();
     emit stateChanged(currentState = State::Busy);
     pm.reset(new PartitionManager(currentDevice));
-    pm.reset(nullptr);
     emit stateChanged(currentState = State::PartitionUnmounted);
 }
 
 void PartitionManagerAdapter::wipeDevice()
 {
     emit stateChanged(State::Wiping);
-    QThread::sleep(5);
+    pm->WipeVolume();
     emit finished();
     emit stateChanged(currentState);
 }
 
-void PartitionManagerAdapter::createPartition()
+void PartitionManagerAdapter::createPartition(const unsigned short slot,
+                                              const QString &password)
 {
     emit stateChanged(currentState = State::Busy);
-    QThread::sleep(3);
+    pm->CreatePartition(slot,password.toStdString());
     emit finished();
     emit stateChanged(currentState = State::PartitionUnmounted);
 }
 
-void PartitionManagerAdapter::mountPartition()
+void PartitionManagerAdapter::mountPartition(const QString &password)
 {
     emit stateChanged(currentState = State::Busy);
-    QThread::sleep(3);
+    pm->MountPartition(password.toStdString());
     emit finished();
     emit stateChanged(currentState = State::PartitionMounted);
 
@@ -47,13 +47,21 @@ void PartitionManagerAdapter::mountPartition()
 void PartitionManagerAdapter::unmountPartition()
 {
     emit stateChanged(currentState = State::Busy);
-    QThread::sleep(1);
+    pm->UnmountPartition();
     emit stateChanged(currentState = State::PartitionUnmounted);
 }
 
 void PartitionManagerAdapter::ejectDevice()
 {
     emit stateChanged(currentState = State::Busy);
-    QThread::sleep(1);
+    pm.reset();
     emit stateChanged(currentState = State::NoDeviceSet);
+}
+
+void PartitionManagerAdapter::abortOperation()
+{
+    if(pm)
+    {
+        // pm->abortOperation();
+    }
 }

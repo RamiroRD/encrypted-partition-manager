@@ -40,3 +40,13 @@ void CreateDialog::verify(const QString &password)
 {
     acceptButton->setDisabled(password.isEmpty());
 }
+
+unsigned short CreateDialog::getSlot()
+{
+    return slotSelector->value();
+}
+
+const QString &CreateDialog::getPassword()
+{
+    return passwordField->text();
+}

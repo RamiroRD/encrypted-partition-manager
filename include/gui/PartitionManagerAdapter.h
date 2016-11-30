@@ -11,7 +11,6 @@
 
 enum class State
 {
-
     NoDeviceSet,
     PartitionMounted,
     PartitionUnmounted,
@@ -42,10 +41,12 @@ signals:
 public slots:
     void setDevice(const QString& devName);
     void wipeDevice();
-    void createPartition();
-    void mountPartition();
+    void createPartition(const unsigned short slot,
+                         const QString &password);
+    void mountPartition(const QString &password);
     void unmountPartition();
     void ejectDevice();
+    void abortOperation();
 private:
     std::string currentDevice;
     State currentState;

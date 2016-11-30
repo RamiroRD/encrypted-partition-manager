@@ -41,8 +41,9 @@ public:
 signals:
     void devChangeRequested(const QString& devName);
     void wipeRequested();
-    void createRequested();
-    void mountRequested();
+    void createRequested(const unsigned short slot,
+                         const QString &password);
+    void mountRequested(const QString &password);
     void unmountRequested();
     void ejectRequested();
 public slots:

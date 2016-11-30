@@ -152,9 +152,11 @@ void PartitionManagerWindow::createPartition()
     {
         QProgressDialog pd (tr("Creating partition..."), "", 0,0,this);
         pd.setCancelButton(nullptr);
+        emit createRequested(dialog.getSlot(),
+                             dialog.getPassword());
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
-        emit createRequested();
+
         pd.exec();
     }
 
@@ -173,7 +175,7 @@ void PartitionManagerWindow::mountPartition()
         QProgressDialog pd (tr("Searching partition..."), tr("Cancel"), 0,0,this);
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
-        emit mountRequested();
+        emit mountRequested(password);
         pd.exec();
     }
 

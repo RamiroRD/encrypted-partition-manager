@@ -21,6 +21,8 @@ class CreateDialog : public QDialog
 
 public:
     CreateDialog(QWidget * parent);
+    unsigned short getSlot();
+    const QString &getPassword();
 
 public slots:
     void verify(const QString &password);
