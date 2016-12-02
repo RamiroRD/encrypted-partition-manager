@@ -33,17 +33,18 @@ class PartitionManagerAdapter : public QObject
     Q_OBJECT
 public:
     explicit PartitionManagerAdapter(QObject *parent = 0);
-
+    void pollProgress();
 signals:
     void stateChanged(const State state);
     void finished();
     void progressChanged(unsigned short);
+
 public slots:
     void setDevice(const QString& devName);
     void wipeDevice();
     void createPartition(const unsigned short slot,
-                         const QString &password);
-    void mountPartition(const QString &password);
+                         const QString password);
+    void mountPartition(const QString password);
     void unmountPartition();
     void ejectDevice();
     void abortOperation();

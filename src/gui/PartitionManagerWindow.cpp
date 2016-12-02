@@ -136,9 +136,13 @@ void PartitionManagerWindow::wipeDevice()
                                        QMessageBox::Yes | QMessageBox::No,
                                        QMessageBox::No);
     if(reply == QMessageBox::Yes) {
-        QProgressDialog pd (tr("Erasing volume."), "Cancel", 0, 100,this);
+        QProgressDialog pd (tr("Erasing volume."), tr("Cancel"), 0, 100,this);
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
+        connect(&pd,&QProgressDialog::canceled,
+                pma,&PartitionManagerAdapter::abortOperation,Qt::DirectConnection);
+        connect(pma,&PartitionManagerAdapter::progressChanged,
+                &pd,&QProgressDialog::setValue);
         emit wipeRequested();
         pd.exec();
     }
@@ -147,7 +151,6 @@ void PartitionManagerWindow::wipeDevice()
 void PartitionManagerWindow::createPartition()
 {
     CreateDialog dialog(this);
-    dialog.show();
     if(dialog.exec() == QDialog::Accepted)
     {
         QProgressDialog pd (tr("Creating partition..."), "", 0,0,this);
@@ -175,6 +178,8 @@ void PartitionManagerWindow::mountPartition()
         QProgressDialog pd (tr("Searching partition..."), tr("Cancel"), 0,0,this);
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
+        connect(&pd,&QProgressDialog::canceled,
+                pma,&PartitionManagerAdapter::abortOperation,Qt::DirectConnection);
         emit mountRequested(password);
         pd.exec();
     }

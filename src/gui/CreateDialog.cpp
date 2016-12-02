@@ -46,7 +46,7 @@ unsigned short CreateDialog::getSlot()
     return slotSelector->value();
 }
 
-const QString &CreateDialog::getPassword()
+const QString CreateDialog::getPassword()
 {
     return passwordField->text();
 }

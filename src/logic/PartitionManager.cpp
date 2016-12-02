@@ -7,8 +7,11 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <vector>
 #include <cassert>
 #include <cstdio>
+#include <cmath>
+
 
 #include "logic/PartitionManager.h"
 
@@ -36,6 +39,7 @@ PartitionManager::PartitionManager(const std::string &device)
       mProgress(0),
       mOperationCanceled(false)
 {
+    std::lock_guard<std::mutex> lock(mGuard);
     /*
      * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
      * una excepción que debería manejarse desde el caller del constructor.
@@ -143,60 +147,65 @@ void PartitionManager::closeMapping(const std::string &logicalDevice)
 
 unsigned char PartitionManager::getProgress() const
 {
-    return mProgress.load();
+    return mProgress;
 }
 
-void PartitionManager::WipeVolume()
+bool PartitionManager::wipeDevice()
 {
     std::lock_guard<std::mutex> lock(mGuard);
 
     if(isMountPoint(MOUNT_POINT))
-        throw std::logic_error("A partition is already mounted");
-
-    std::ifstream random;
-    random.open("/dev/urandom", std::ios_base::binary | std::ios_base::in);
-    random.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        return false;
+    if(mProgress != 0)
+        return false;
 
     std::string path = MAPPINGS_FOLDER_PATH;
     path += WRAPAROUND_DEVICE_NAME;
-    std::ofstream out;
-    out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    out.open(path, std::ios_base::binary | std::ios_base::out);
 
-    std::cerr << "Wiping volume..." << std::endl;
+    int in  = open("/dev/urandom", O_RDONLY);
+    int out = open(path.c_str(), O_WRONLY);
 
-    char buffer[BLOCK_SIZE_ * MAX_TRANSFER_SIZE];
-    for (off_t i = 0; i < mDeviceSize ;)
+    std::cerr << "Wiping device ..." << std::endl;
+
+    std::vector<char> buffer(MAX_TRANSFER_SIZE,'\0');
+    mProgress = 0;
+    unsigned amount = std::min(mDeviceSize, MAX_TRANSFER_SIZE);
+    for (off_t i = 0;
+         i < mDeviceSize && !mOperationCanceled;
+         i += (amount = std::min(mDeviceSize - i, MAX_TRANSFER_SIZE)))
     {
-        if(mOperationCanceled)
+        if(read(in,buffer.data(),amount) == -1)
         {
-            std::cerr << "Wipe canceled." << std::endl;
-            mOperationCanceled = false;
-            break;
+            std::cerr << "Read failed." << std::endl;
+            return false;
         }
-        unsigned blocks = std::min(mDeviceSize - i, MAX_TRANSFER_SIZE);
-        random.read(buffer, blocks * BLOCK_SIZE_);
-        out.write(buffer, blocks * BLOCK_SIZE_);
-        /*
-         * TODO: habiendo sido ejecutado una vez, el progreso queda en 100.
-         * Debería haber algún mecanismo para ponerlo en cero ANTES de volver a
-         * entrar a este método (Un thread simple que termina de pollear
-         * mProgress cuando el progreso es 100 puede terminar prematuramente).
-         */
-        mProgress = 100 * i / mDeviceSize;
-        i += blocks;
+
+        if(write(out,buffer.data(),amount) == -1)
+        {
+            std::cerr << "Write failed." << std::endl;
+            return false;
+        }
+        mProgress = std::ceil(100 * i / mDeviceSize);
+    }
+
+    if(mOperationCanceled)
+    {
+        std::cout << "Wipe canceled." << std::endl;
+        mOperationCanceled = false;
     }
     mProgress = 100;
-    // TODO: posiblemente atrapar excepciones?
+    std::cerr << "Device wiped." << std::endl;
+    return true;
+
 }
 
-void PartitionManager::CreatePartition(const unsigned short slot,
+bool PartitionManager::createPartition(const unsigned short slot,
                                        const std::string &password)
 {
     std::lock_guard<std::mutex> lock(mGuard);
     if (isMountPoint(MOUNT_POINT))
         throw std::logic_error("Partition is already mounted");
-    if (slot > SLOTS_AMOUNT)
+    if (slot >= SLOTS_AMOUNT)
         throw std::domain_error("Slot number out of range");
     if (password.empty())
         throw std::domain_error("Empty password");
@@ -208,25 +217,28 @@ void PartitionManager::CreatePartition(const unsigned short slot,
     cmd += MAPPINGS_FOLDER_PATH;
     cmd += ENCRYPTED_DEVICE_NAME;
     if(system(cmd.c_str())!=0)
-        throw CommandError(cmd);
+        return false;
     if (!opendir(MOUNT_POINT))
         mkdir(MOUNT_POINT, 0777);
     std::string encryptedPath = MAPPINGS_FOLDER_PATH;
     encryptedPath += ENCRYPTED_DEVICE_NAME;
-    mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "");
+    if(mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "")==0)
+        return true;
+    else
+        return false;
+
 }
 
-void PartitionManager::MountPartition(const std::string &password)
+bool PartitionManager::mountPartition(const std::string &password)
 {
     std::lock_guard<std::mutex> lock(mGuard);
     /*
-     *
      * Primero, tenemos que ver que no esté la partición montada del mapping
      * del cifrado. Si existe, desmontarla. Que esté montada implica que el
      * mapping del cifrado también está andando. Falla en tal caso.
      */
     if (isMountPoint(MOUNT_POINT))
-        throw std::logic_error("Partition is already mounted");
+        return false;
 
     /*
      * Cerramos el mapping de cifrado en cada vuelta y volvemos a abrir con 
@@ -236,35 +248,29 @@ void PartitionManager::MountPartition(const std::string &password)
     if (!opendir(MOUNT_POINT))
         mkdir(MOUNT_POINT, 0777);
     bool success = false;
-    for (unsigned short i = 0; i < SLOTS_AMOUNT; i++)
+    for (unsigned short i = 0; i < SLOTS_AMOUNT && !success; i++)
     {
         if(mOperationCanceled)
         {
             std::cerr << "Mount operation canceled." << std::endl;
             mOperationCanceled = false;
-            success = true;
             break;
         }
         closeMapping(ENCRYPTED_DEVICE_NAME);
         openCryptMapping(i, password);
         std::string encryptedPath = MAPPINGS_FOLDER_PATH;
         encryptedPath += ENCRYPTED_DEVICE_NAME;
-        int mountResult = mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "");
+        success = mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "") == 0;
 
-        if (mountResult == 0)
-        {
-            success = true;
-            break;
-        }
-
-        closeMapping(ENCRYPTED_DEVICE_NAME);
+        if(!success)
+            closeMapping(ENCRYPTED_DEVICE_NAME);
+        else
+            std::cerr << "Partition found and mounted." << std::endl;
     }
-    if (!success)
-        throw PartitionNotFoundException();
-
+    return success;
 }
 
-void PartitionManager::UnmountPartition()
+bool PartitionManager::unmountPartition()
 {
     std::lock_guard<std::mutex> lock(mGuard);
     int exitCode;
@@ -274,8 +280,25 @@ void PartitionManager::UnmountPartition()
     if ((exitCode = umount(MOUNT_POINT)) != 0)
         throw SysCallError("Unmount failed",exitCode);
 
-    rmdir(MOUNT_POINT);
+    if(rmdir(MOUNT_POINT) != 0)
+        return false;
     closeMapping(ENCRYPTED_DEVICE_NAME);
+    return true;
+}
+
+void PartitionManager::resetProgress()
+{
+    mProgress = 0;
+}
+
+void PartitionManager::abortOperation()
+{
+    mOperationCanceled = true;
+}
+
+bool PartitionManager::isPartitionMounted()
+{
+    return isMountPoint(MOUNT_POINT);
 }
 
 PartitionManager::~PartitionManager()
