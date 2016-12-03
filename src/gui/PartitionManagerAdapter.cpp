@@ -81,7 +81,10 @@ void PartitionManagerAdapter::unmountPartition()
 
 void PartitionManagerAdapter::ejectDevice()
 {
-    qDebug("Not yet implemented!");
+    emit stateChanged(currentState = State::Busy);
+    pm->ejectDevice();
+    pm.reset(nullptr);
+    emit stateChanged(currentState = State::NoDeviceSet);
 }
 
 void PartitionManagerAdapter::abortOperation()

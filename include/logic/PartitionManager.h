@@ -150,6 +150,14 @@ public:
      */
     void abortOperation();
 
+    /*
+     * ejectDevice:
+     *
+     * Si se llama este método en cualquier momento, el se ciera el
+     * wraparound y se desmonta la partición al destruirse la instancia.
+     */
+    void ejectDevice();
+
     static constexpr unsigned short SLOTS_AMOUNT = 8192;
 private:
     // Ambos en bloques 
@@ -159,13 +167,17 @@ private:
     std::atomic<unsigned short> mProgress;
     std::atomic<bool>           mOperationCanceled;
     std::mutex                  mGuard;
+    bool                        mCloseAtDestroy;
 
     void closeMapping(const std::string&);
     void openCryptMapping(const unsigned short slot,
                           const std::string &password);
     void createWraparound();
+    void closeWraparound();
     bool logicalDeviceExists(const std::string&);
     bool isMountPoint(const std::string& dirPath);
+    bool isWraparoundPresent();
+
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
     // Workaround al bug 54483 de gcc.

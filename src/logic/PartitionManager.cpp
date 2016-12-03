@@ -39,7 +39,8 @@ PartitionManager::PartitionManager(const std::string &device)
       mOffsetMultiple(0),
       mCurrentDevice(device),
       mProgress(0),
-      mOperationCanceled(false)
+      mOperationCanceled(false),
+      mCloseAtDestroy(false)
 {
     std::lock_guard<std::mutex> lock(mGuard);
     /*
@@ -74,13 +75,18 @@ PartitionManager::PartitionManager(const std::string &device)
     /*
      * Ver que exista el wraparound y crearlo si no existe.
      */
-    std::string path = MAPPINGS_FOLDER_PATH;
-    path += WRAPAROUND_DEVICE_NAME;
-    if (!fileExists(path))
+    if(!isWraparoundPresent())
     {
         std::cerr << "Wraparound device not open." << std::endl;
         createWraparound();
     }
+}
+
+bool PartitionManager::isWraparoundPresent()
+{
+    std::string path = MAPPINGS_FOLDER_PATH;
+    path += WRAPAROUND_DEVICE_NAME;
+    return fileExists(path);
 }
 
 void PartitionManager::createWraparound()
@@ -99,6 +105,17 @@ void PartitionManager::createWraparound()
     std::cerr << "Opening wraparound ..." << std::endl;
     if (pclose(stream) != 0)
         throw CommandError("dmsetup create wraparound");
+}
+
+void PartitionManager::closeWraparound()
+{
+
+    std::string cmd = "dmsetup remove ";
+    cmd += WRAPAROUND_DEVICE_NAME;
+    if(system(cmd.c_str()) != 0)
+        throw CommandError("Couldn't close wraparound.");
+     std::cerr << "Wraparound closed." << std::endl;
+
 }
 
 // dirPath sin la barra!
@@ -311,6 +328,18 @@ bool PartitionManager::isPartitionMounted()
     return isMountPoint(MOUNT_POINT);
 }
 
+void PartitionManager::ejectDevice()
+{
+    mCloseAtDestroy = true;
+}
+
 PartitionManager::~PartitionManager()
 {
+    if(mCloseAtDestroy)
+    {
+        if(isPartitionMounted())
+            unmountPartition();
+        if(isWraparoundPresent())
+            closeWraparound();
+    }
 }
