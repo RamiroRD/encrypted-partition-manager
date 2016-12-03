@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <mntent.h>
 
 #include <iostream>
 #include <sstream>
@@ -11,6 +12,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cmath>
+#include <cstring>
 
 
 #include "logic/PartitionManager.h"
@@ -100,22 +102,27 @@ void PartitionManager::createWraparound()
 }
 
 // dirPath sin la barra!
-// Se fija si el directorio y sus contenidos están en el mismo dispositivo
 bool PartitionManager::isMountPoint(const std::string &dirPath)
 {
-    struct stat dirStat;
-    struct stat parentStat;
-    const std::string parent = dirPath + "/..";
+    FILE * mtabFile = setmntent("/etc/mtab","r");
+    struct mntent * mountEntry = getmntent(mtabFile);
+    std::string encryptedDevicePath = std::string(MAPPINGS_FOLDER_PATH) +
+                                        ENCRYPTED_DEVICE_NAME;
+    bool found = false;
+    for(;mountEntry != nullptr && !found;
+        mountEntry=getmntent(mtabFile))
+    {
+        if(strcmp(mountEntry->mnt_dir,dirPath.c_str())==0)
+        {
+            found = true;
+            if(strcmp(encryptedDevicePath.c_str(),mountEntry->mnt_fsname) !=0)
+                throw std::runtime_error("Another device mounted on mountpoint!");
+        }
+    }
 
+    endmntent(mtabFile);
+    return found;
 
-    if(stat(dirPath.c_str(),&dirStat) !=0)
-        return false;
-    if(!S_ISDIR(dirStat.st_mode))
-        return false;
-    if(stat(parent.c_str(),&parentStat) !=0)
-        return false;
-    
-    return dirStat.st_dev != parentStat.st_dev;
 }
 
 void PartitionManager::openCryptMapping(const unsigned short slot,
