@@ -167,12 +167,13 @@ bool PartitionManager::wipeDevice()
 
     std::cerr << "Wiping device ..." << std::endl;
 
+    const auto deviceSize = mDeviceSize * BLOCK_SIZE;
     std::vector<char> buffer(MAX_TRANSFER_SIZE,'\0');
     mProgress = 0;
-    unsigned amount = std::min(mDeviceSize, MAX_TRANSFER_SIZE);
-    for (off_t i = 0;
-         i < mDeviceSize && !mOperationCanceled;
-         i += (amount = std::min(mDeviceSize - i, MAX_TRANSFER_SIZE)))
+    unsigned amount = std::min(deviceSize, MAX_TRANSFER_SIZE);
+    for (volatile off_t i = 0;
+         i < deviceSize && !mOperationCanceled;
+         i += (amount = std::min(deviceSize - i, MAX_TRANSFER_SIZE)))
     {
         if(read(in,buffer.data(),amount) == -1)
         {
@@ -185,7 +186,7 @@ bool PartitionManager::wipeDevice()
             std::cerr << "Write failed." << std::endl;
             return false;
         }
-        mProgress = std::ceil(100 * i / mDeviceSize);
+        mProgress = std::ceil(100 * i / deviceSize);
     }
 
     if(mOperationCanceled)
@@ -219,10 +220,11 @@ bool PartitionManager::createPartition(const unsigned short slot,
     if(system(cmd.c_str())!=0)
         return false;
     if (!opendir(MOUNT_POINT))
-        mkdir(MOUNT_POINT, 0777);
+        mkdir(MOUNT_POINT, 0);
+    chmod(MOUNT_POINT,0777);
     std::string encryptedPath = MAPPINGS_FOLDER_PATH;
     encryptedPath += ENCRYPTED_DEVICE_NAME;
-    if(mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "")==0)
+    if(mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "fmask=000,dmask=000")==0)
         return true;
     else
         return false;
@@ -246,7 +248,8 @@ bool PartitionManager::mountPartition(const std::string &password)
      */
     std::cerr << "Searching partition..." << std::endl;
     if (!opendir(MOUNT_POINT))
-        mkdir(MOUNT_POINT, 0777);
+        mkdir(MOUNT_POINT, 0);
+    chmod(MOUNT_POINT,0777);
     bool success = false;
     for (unsigned short i = 0; i < SLOTS_AMOUNT && !success; i++)
     {
@@ -260,7 +263,7 @@ bool PartitionManager::mountPartition(const std::string &password)
         openCryptMapping(i, password);
         std::string encryptedPath = MAPPINGS_FOLDER_PATH;
         encryptedPath += ENCRYPTED_DEVICE_NAME;
-        success = mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "") == 0;
+        success = mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "dmask=000,fmask=000") == 0;
 
         if(!success)
             closeMapping(ENCRYPTED_DEVICE_NAME);
