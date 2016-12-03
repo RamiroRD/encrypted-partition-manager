@@ -169,7 +169,7 @@ private:
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
     // Workaround al bug 54483 de gcc.
-    const off_t MAX_TRANSFER_SIZE = 512; // %
+    const off_t MAX_TRANSFER_SIZE = 4 * (1 << (20-1)); // % 4 * MiB
     static constexpr const char * WRAPAROUND_DEVICE_NAME = "wraparound";
     static constexpr const char * MAPPINGS_FOLDER_PATH = "/dev/mapper/";
     static constexpr const char * ENCRYPTED_DEVICE_NAME = "encrypted";
