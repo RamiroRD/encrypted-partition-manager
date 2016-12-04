@@ -320,6 +320,7 @@ void PartitionManager::ejectDevice()
 
 bool PartitionManager::isWraparoundOurs()
 {
+    // FIXME
     return true;
 }
 
@@ -349,6 +350,6 @@ PartitionManager::~PartitionManager()
         if(fileExists(MAPPER_DIR+ENCRYPTED))
             closeMapping(ENCRYPTED);
     }
-    if(!isPartitionMounted() && fileExists(MAPPER_DIR+ENCRYPTED))
+    if(!isPartitionMounted() && fileExists(MAPPER_DIR+WRAPAROUND))
         closeMapping(WRAPAROUND);
 }
