@@ -2,6 +2,7 @@
 #include <QInputDialog>
 #include <QProgressDialog>
 #include <QApplication>
+#include <parted/parted.h>
 
 #include "gui/PartitionManagerWindow.h"
 #include "gui/CreateDialog.h"
@@ -57,10 +58,15 @@ void PartitionManagerWindow::setupUI()
     unmountButton->setDisabled(true);
     ejectButton->setDisabled(true);
 
-    // Test
-    deviceSelector->addItem("/dev/sda");
-    deviceSelector->addItem("/dev/sdb");
-    deviceSelector->addItem("/dev/sdc");
+    {
+        ped_device_probe_all();
+        PedDevice * dev = ped_device_get_next(NULL);
+        while(dev != NULL)
+        {
+            deviceSelector->addItem(QString(dev->path));
+            dev = ped_device_get_next(dev);
+        }
+    }
     deviceSelector->setCurrentIndex(-1);
 }
 
