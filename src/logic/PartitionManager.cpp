@@ -8,14 +8,22 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <cassert>
 #include <cstdio>
 #include <cmath>
 #include <cstring>
+#include <parted/parted.h>
 
 
 #include "logic/PartitionManager.h"
+
+const std::string PartitionManager::WRAPAROUND = "wraparound";
+const std::string PartitionManager::MAPPER_DIR = "/dev/mapper/";
+const std::string PartitionManager::ENCRYPTED = "encrypted";
+const std::string PartitionManager::MOUNTPOINT = "/mnt/part";
+
 
 static bool fileExists(const std::string &path)
 {
@@ -25,15 +33,12 @@ static bool fileExists(const std::string &path)
 
 bool PartitionManager::logicalDeviceExists(const std::string &logicalDev)
 {
-    std::string filePath = PartitionManager::MAPPINGS_FOLDER_PATH;
+    std::string filePath = PartitionManager::MAPPER_DIR;
     filePath += logicalDev;
     return fileExists(filePath);
 }
 
-/*
-  * Verifica que exista el dispositivo y crea el mapping wraparound si ya no
-  * existiera.
-  */
+
 PartitionManager::PartitionManager(const std::string &device)
     : mDeviceSize(0),
       mOffsetMultiple(0),
@@ -47,7 +52,6 @@ PartitionManager::PartitionManager(const std::string &device)
      * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
      * una excepción que debería manejarse desde el caller del constructor.
      */
-
      int fd = open(device.c_str(),O_RDWR);
      if(fd == -1)
      {
@@ -58,10 +62,10 @@ PartitionManager::PartitionManager(const std::string &device)
         else
             throw std::runtime_error("Unknown error when opening device block file.");
      }else{
-        struct stat fileStat;
         unsigned long long size;
-        fstat(fd,&fileStat);
-        if(!S_ISBLK(fileStat.st_mode))
+        fstat(fd,&mFileStat);
+
+        if(!S_ISBLK(mFileStat.st_mode))
             throw std::domain_error("Not a block file!");
         if(ioctl(fd, BLKGETSIZE64, &size)==-1)
             throw SysCallError("ioctl BLKGETSIZE64",errno);
@@ -71,22 +75,27 @@ PartitionManager::PartitionManager(const std::string &device)
         std::cerr << device << " has " << mDeviceSize << " blocks."
                 << std::endl;
      }
+    close(fd);
+
+
 
     /*
-     * Ver que exista el wraparound y crearlo si no existe.
+     * Verificar wraparound y /mnt/part.
      */
-    if(!isWraparoundPresent())
+    if(fileExists(MAPPER_DIR+WRAPAROUND))
     {
-        std::cerr << "Wraparound device not open." << std::endl;
-        createWraparound();
+        if(!isWraparoundOurs())
+        {
+            if(isPartitionMounted())
+                unmountPartition();
+            if(fileExists(MAPPER_DIR+ENCRYPTED))
+                closeMapping(ENCRYPTED);
+            closeMapping(MAPPER_DIR+WRAPAROUND);
+            createWraparound();
+        }
     }
-}
-
-bool PartitionManager::isWraparoundPresent()
-{
-    std::string path = MAPPINGS_FOLDER_PATH;
-    path += WRAPAROUND_DEVICE_NAME;
-    return fileExists(path);
+    else
+            createWraparound();
 }
 
 void PartitionManager::createWraparound()
@@ -99,7 +108,7 @@ void PartitionManager::createWraparound()
 
     FILE *stream = popen("dmsetup create wraparound", "w");
 
-    std::string input = table.str();
+    const std::string &input = table.str();
     fwrite(input.c_str(), 1, input.size(), stream);
 
     std::cerr << "Opening wraparound ..." << std::endl;
@@ -107,24 +116,14 @@ void PartitionManager::createWraparound()
         throw CommandError("dmsetup create wraparound");
 }
 
-void PartitionManager::closeWraparound()
-{
-
-    std::string cmd = "dmsetup remove ";
-    cmd += WRAPAROUND_DEVICE_NAME;
-    if(system(cmd.c_str()) != 0)
-        throw CommandError("Couldn't close wraparound.");
-     std::cerr << "Wraparound closed." << std::endl;
-
-}
 
 // dirPath sin la barra!
 bool PartitionManager::isMountPoint(const std::string &dirPath)
 {
     FILE * mtabFile = setmntent("/etc/mtab","r");
     struct mntent * mountEntry = getmntent(mtabFile);
-    std::string encryptedDevicePath = std::string(MAPPINGS_FOLDER_PATH) +
-                                        ENCRYPTED_DEVICE_NAME;
+    std::string encryptedDevicePath = std::string(MAPPER_DIR) +
+                                        ENCRYPTED;
     bool found = false;
     for(;mountEntry != nullptr && !found;
         mountEntry=getmntent(mtabFile))
@@ -139,22 +138,23 @@ bool PartitionManager::isMountPoint(const std::string &dirPath)
 
     endmntent(mtabFile);
     return found;
-
 }
 
 void PartitionManager::openCryptMapping(const unsigned short slot,
                                         const std::string &password)
 {
     const off_t offset = slot * mOffsetMultiple;
-    char *cmd;
-    asprintf(&cmd, "cryptsetup --hash=sha512 --cipher=aes-xts-plain64 --offset %jd open --size %jd --type=plain %s%s %s",
-             offset, mDeviceSize, MAPPINGS_FOLDER_PATH,
-             WRAPAROUND_DEVICE_NAME, ENCRYPTED_DEVICE_NAME);
+    std::stringstream ss;
+    ss << "cryptsetup --hash=sha512 --cipher=aes-xts-plain64";
+    ss << " --offset " << offset;
+    ss << " open --size " << mDeviceSize;
+    ss << " --type=plain " << MAPPER_DIR << WRAPAROUND;
+    ss << " " << ENCRYPTED;
+    const std::string &cmd = ss.str();
 
-    FILE *stream = popen(cmd, "w");
+    FILE *stream = popen(cmd.c_str(), "w");
     fwrite(password.c_str(), 1, password.size(), stream);
     fputc('\n', stream);
-    free(cmd);
     if (pclose(stream) != 0)
         throw CommandError(cmd);
 }
@@ -178,13 +178,13 @@ bool PartitionManager::wipeDevice()
 {
     std::lock_guard<std::mutex> lock(mGuard);
 
-    if(isMountPoint(MOUNT_POINT))
+    if(isMountPoint(MOUNTPOINT))
         return false;
     if(mProgress != 0)
         return false;
 
-    std::string path = MAPPINGS_FOLDER_PATH;
-    path += WRAPAROUND_DEVICE_NAME;
+    std::string path = MAPPER_DIR;
+    path += WRAPAROUND;
 
     int in  = open("/dev/urandom", O_RDONLY);
     int out = open(path.c_str(), O_WRONLY);
@@ -228,31 +228,24 @@ bool PartitionManager::createPartition(const unsigned short slot,
                                        const std::string &password)
 {
     std::lock_guard<std::mutex> lock(mGuard);
-    if (isMountPoint(MOUNT_POINT))
+    if (isMountPoint(MOUNTPOINT))
         throw std::logic_error("Partition is already mounted");
     if (slot >= SLOTS_AMOUNT)
         throw std::domain_error("Slot number out of range");
     if (password.empty())
         throw std::domain_error("Empty password");
     
-    closeMapping(ENCRYPTED_DEVICE_NAME);
+    closeMapping(ENCRYPTED);
     openCryptMapping(slot,password);
 
     std::string cmd = "mkfs.vfat ";
-    cmd += MAPPINGS_FOLDER_PATH;
-    cmd += ENCRYPTED_DEVICE_NAME;
+    cmd += MAPPER_DIR;
+    cmd += ENCRYPTED;
     if(system(cmd.c_str())!=0)
-        return false;
-    if (!opendir(MOUNT_POINT))
-        mkdir(MOUNT_POINT, 0);
-    chmod(MOUNT_POINT,0777);
-    std::string encryptedPath = MAPPINGS_FOLDER_PATH;
-    encryptedPath += ENCRYPTED_DEVICE_NAME;
-    if(mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "fmask=000,dmask=000")==0)
-        return true;
-    else
-        return false;
-
+    {
+        throw CommandError(cmd);
+    }
+    return callMount();
 }
 
 bool PartitionManager::mountPartition(const std::string &password)
@@ -263,7 +256,7 @@ bool PartitionManager::mountPartition(const std::string &password)
      * del cifrado. Si existe, desmontarla. Que esté montada implica que el
      * mapping del cifrado también está andando. Falla en tal caso.
      */
-    if (isMountPoint(MOUNT_POINT))
+    if (isMountPoint(MOUNTPOINT))
         return false;
 
     /*
@@ -271,9 +264,6 @@ bool PartitionManager::mountPartition(const std::string &password)
      * las password pasada hasta poder montar un sistema de archivos FAT. 
      */
     std::cerr << "Searching partition..." << std::endl;
-    if (!opendir(MOUNT_POINT))
-        mkdir(MOUNT_POINT, 0);
-    chmod(MOUNT_POINT,0777);
     bool success = false;
     for (unsigned short i = 0; i < SLOTS_AMOUNT && !success; i++)
     {
@@ -283,16 +273,13 @@ bool PartitionManager::mountPartition(const std::string &password)
             mOperationCanceled = false;
             break;
         }
-        closeMapping(ENCRYPTED_DEVICE_NAME);
+        closeMapping(ENCRYPTED);
         openCryptMapping(i, password);
-        std::string encryptedPath = MAPPINGS_FOLDER_PATH;
-        encryptedPath += ENCRYPTED_DEVICE_NAME;
-        success = mount(encryptedPath.c_str(), MOUNT_POINT, "vfat", 0, "dmask=000,fmask=000") == 0;
 
-        if(!success)
-            closeMapping(ENCRYPTED_DEVICE_NAME);
-        else
+        if((success = callMount()))
             std::cerr << "Partition found and mounted." << std::endl;
+        else
+            closeMapping(ENCRYPTED);
     }
     return success;
 }
@@ -300,16 +287,14 @@ bool PartitionManager::mountPartition(const std::string &password)
 bool PartitionManager::unmountPartition()
 {
     std::lock_guard<std::mutex> lock(mGuard);
-    int exitCode;
-    if (!isMountPoint(MOUNT_POINT))
+    if (!isMountPoint(MOUNTPOINT))
         throw std::logic_error("No mounted partition");
+    if (!callUmount())
+        throw SysCallError("Unmount failed");
 
-    if ((exitCode = umount(MOUNT_POINT)) != 0)
-        throw SysCallError("Unmount failed",exitCode);
-
-    if(rmdir(MOUNT_POINT) != 0)
+    if(rmdir(MOUNTPOINT.c_str()) != 0)
         return false;
-    closeMapping(ENCRYPTED_DEVICE_NAME);
+    closeMapping(ENCRYPTED);
     return true;
 }
 
@@ -325,7 +310,7 @@ void PartitionManager::abortOperation()
 
 bool PartitionManager::isPartitionMounted()
 {
-    return isMountPoint(MOUNT_POINT);
+    return isMountPoint(MOUNTPOINT);
 }
 
 void PartitionManager::ejectDevice()
@@ -333,13 +318,37 @@ void PartitionManager::ejectDevice()
     mCloseAtDestroy = true;
 }
 
+bool PartitionManager::isWraparoundOurs()
+{
+    return true;
+}
+
+bool PartitionManager::callMount()
+{
+    if (!opendir(MOUNTPOINT.c_str()))
+        mkdir(MOUNTPOINT.c_str(), 0);
+    chmod(MOUNTPOINT.c_str(),0777);
+    return (mount((MAPPER_DIR+ENCRYPTED).c_str(),
+                    MOUNTPOINT.c_str(),
+                    "vfat", 0,
+                    "dmask=000,fmask=000") == 0);
+}
+
+bool PartitionManager::callUmount()
+{
+    return (umount(MOUNTPOINT.c_str()) == 0);
+}
+
 PartitionManager::~PartitionManager()
 {
+
     if(mCloseAtDestroy)
     {
         if(isPartitionMounted())
             unmountPartition();
-        if(isWraparoundPresent())
-            closeWraparound();
+        if(fileExists(MAPPER_DIR+ENCRYPTED))
+            closeMapping(ENCRYPTED);
     }
+    if(!isPartitionMounted() && fileExists(MAPPER_DIR+ENCRYPTED))
+        closeMapping(WRAPAROUND);
 }

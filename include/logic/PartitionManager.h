@@ -2,6 +2,7 @@
 #define PARTITION_MANAGER_H
 
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #include <stdexcept>
 #include <string>
@@ -25,7 +26,7 @@ struct SysCallError : public std::exception
         mWhat += "\". Return code: ";
         mWhat += std::to_string(exitCode);
     }
-    SysCallError(const std::string &cmd, int exitCode)
+    SysCallError(const std::string &cmd, int exitCode = -1)
     {
         SysCallError(cmd.c_str(),exitCode);
     }
@@ -168,24 +169,23 @@ private:
     std::atomic<bool>           mOperationCanceled;
     std::mutex                  mGuard;
     bool                        mCloseAtDestroy;
+    struct stat                 mFileStat;
 
     void closeMapping(const std::string&);
     void openCryptMapping(const unsigned short slot,
                           const std::string &password);
     void createWraparound();
-    void closeWraparound();
     bool logicalDeviceExists(const std::string&);
     bool isMountPoint(const std::string& dirPath);
-    bool isWraparoundPresent();
-
+    bool isWraparoundOurs();
+    bool callMount();
+    bool callUmount();
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    // Workaround al bug 54483 de gcc.
     const off_t MAX_TRANSFER_SIZE = 4 * (1 << (20-1)); // % 4 * MiB
-    static constexpr const char * WRAPAROUND_DEVICE_NAME = "wraparound";
-    static constexpr const char * MAPPINGS_FOLDER_PATH = "/dev/mapper/";
-    static constexpr const char * ENCRYPTED_DEVICE_NAME = "encrypted";
-    static constexpr const char * MOUNT_POINT = "/mnt/part";
-    
+    static const std::string WRAPAROUND;
+    static const std::string MAPPER_DIR;
+    static const std::string ENCRYPTED;
+    static const std::string MOUNTPOINT;
 };
 #endif
