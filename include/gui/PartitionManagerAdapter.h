@@ -38,7 +38,7 @@ signals:
     void stateChanged(const State state);
     void finished();
     void progressChanged(unsigned short);
-
+    void errorOccurred(QString msg);
 public slots:
     void setDevice(const QString& devName);
     void wipeDevice();
@@ -53,6 +53,7 @@ private:
     State currentState;
     short int currentProgress;
     std::unique_ptr<PartitionManager> pm;
+    void changeState(State state);
 };
 
 

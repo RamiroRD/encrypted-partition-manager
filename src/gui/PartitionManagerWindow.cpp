@@ -6,6 +6,7 @@
 
 #include "gui/PartitionManagerWindow.h"
 #include "gui/CreateDialog.h"
+#include "logic/PartitionManager.h"
 
 
 PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
@@ -63,7 +64,10 @@ void PartitionManagerWindow::setupUI()
         PedDevice * dev = ped_device_get_next(NULL);
         while(dev != NULL)
         {
-            deviceSelector->addItem(QString(dev->path));
+            std::string devPath = dev->path;
+            if(devPath != PartitionManager::MAPPER_DIR+PartitionManager::WRAPAROUND &&
+               devPath != PartitionManager::MAPPER_DIR+PartitionManager::ENCRYPTED)
+                deviceSelector->addItem(QString(dev->path));
             dev = ped_device_get_next(dev);
         }
     }
@@ -124,6 +128,10 @@ void PartitionManagerWindow::setupPMA()
     connect(&pmaThread, &QThread::finished, pma, &QObject::deleteLater);
 
 
+    // Ante errores mostramos un QMessageBox
+    connect(pma,&PartitionManagerAdapter::errorOccurred,
+            this,&PartitionManagerWindow::showErrorMessage);
+
     // Arrancamos el PMA
     pmaThread.start();
 
@@ -138,13 +146,15 @@ void PartitionManagerWindow::wipeDevice()
 {
     auto reply = QMessageBox::question(this,
                                        tr("Confirm"),
-                                       tr("Do you want to erase all contents from this device?"),
+                                       tr("Do you want to erase all contents from this device? This can be a lengthy operation."),
                                        QMessageBox::Yes | QMessageBox::No,
                                        QMessageBox::No);
     if(reply == QMessageBox::Yes) {
         QProgressDialog pd (tr("Erasing volume."), tr("Cancel"), 0, 100,this);
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
+        // DirectConnection para poder "interrumpir" el otro thread.
+        // Esto hace que se imprima un error molesto pero no parece pasar nada.
         connect(&pd,&QProgressDialog::canceled,
                 pma,&PartitionManagerAdapter::abortOperation,Qt::DirectConnection);
         connect(pma,&PartitionManagerAdapter::progressChanged,
@@ -184,6 +194,7 @@ void PartitionManagerWindow::mountPartition()
         QProgressDialog pd (tr("Searching partition..."), tr("Cancel"), 0,0,this);
         connect(pma,&PartitionManagerAdapter::finished,
                 &pd,&QProgressDialog::accept);
+        // DirectConnection: ver wipeDevice() de esta clase
         connect(&pd,&QProgressDialog::canceled,
                 pma,&PartitionManagerAdapter::abortOperation,Qt::DirectConnection);
         emit mountRequested(password);
@@ -237,6 +248,13 @@ void PartitionManagerWindow::updateUI(const State state)
         this->statusBar->showMessage(tr("Busy..."));
         break;
     }
+}
+
+void PartitionManagerWindow::showErrorMessage(QString msg)
+{
+    QMessageBox::warning(this,
+                         QObject::tr("An error occurred."),
+                         msg);
 }
 
 PartitionManagerWindow::~PartitionManagerWindow()

@@ -16,27 +16,41 @@ struct CommandError : public std::runtime_error
     CommandError(const std::string &cmd) : std::runtime_error(cmd){};
     CommandError(const char *cmd) : std::runtime_error(cmd){};
 };
+
 struct SysCallError : public std::exception
 {
     
-    SysCallError(const char * cmd, int exitCode)
+    SysCallError(const char * syscall, int returnCode = -1)
     {
         mWhat += "Syscall: \"";
-        mWhat += cmd;
+        mWhat += syscall;
         mWhat += "\". Return code: ";
-        mWhat += std::to_string(exitCode);
+        mWhat += std::to_string(returnCode);
     }
-    SysCallError(const std::string &cmd, int exitCode = -1)
+    SysCallError(const std::string &syscall, int returnCode = -1)
     {
-        SysCallError(cmd.c_str(),exitCode);
+        SysCallError(syscall.c_str(),returnCode);
     }
 
     const char * what() const noexcept
     {
         return mWhat.c_str();
     }
+
+    const std::string &sysCall()
+    {
+        return mSysCall;
+    }
+
+    int returnCode()
+    {
+        return mReturnCode;
+    }
+
     private:
     std::string mWhat;
+    std::string mSysCall;
+    int         mReturnCode;
 };
 struct PartitionNotFoundException : public std::exception{};
 
@@ -160,6 +174,10 @@ public:
     void ejectDevice();
 
     static constexpr unsigned short SLOTS_AMOUNT = 8192;
+    static const std::string WRAPAROUND;
+    static const std::string MAPPER_DIR;
+    static const std::string ENCRYPTED;
+    static const std::string MOUNTPOINT;
 private:
     // Ambos en bloques 
     off_t                       mDeviceSize;
@@ -175,17 +193,15 @@ private:
     void openCryptMapping(const unsigned short slot,
                           const std::string &password);
     void createWraparound();
-    bool logicalDeviceExists(const std::string&);
     bool isMountPoint(const std::string& dirPath);
     bool isWraparoundOurs();
     bool callMount();
     bool callUmount();
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    const off_t MAX_TRANSFER_SIZE = 4 * (1 << (20-1)); // % 4 * MiB
-    static const std::string WRAPAROUND;
-    static const std::string MAPPER_DIR;
-    static const std::string ENCRYPTED;
-    static const std::string MOUNTPOINT;
+    const off_t MAX_TRANSFER_SIZE = 32 * (1 << (20-1)); // % 32 * MiB
+
 };
+
+
 #endif

@@ -54,6 +54,7 @@ public slots:
     void unmountPartition();
     void ejectDevice();
     void updateUI(const State state);
+    void showErrorMessage(QString msg);
 };
 
 #endif // PARTITIONMANAGERWINDOW_H

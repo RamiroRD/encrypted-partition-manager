@@ -27,13 +27,13 @@ void PartitionManagerAdapter::setDevice(const QString &devName)
 
 void PartitionManagerAdapter::wipeDevice()
 {
-    emit stateChanged(State::Wiping);
+    changeState(State::Wiping);
     pm->resetProgress();
     std::thread thr(&PartitionManagerAdapter::pollProgress,this);
     pm->wipeDevice();
     emit finished();
     thr.join();
-    emit stateChanged(currentState = State::PartitionUnmounted);
+    changeState(State::PartitionUnmounted);
 }
 
 void PartitionManagerAdapter::pollProgress()
@@ -45,50 +45,105 @@ void PartitionManagerAdapter::pollProgress()
         currentProgress = pm->getProgress();
         usleep(20000);
     }
-
 }
 
 void PartitionManagerAdapter::createPartition(const unsigned short slot,
                                               const QString password)
 {
-    emit stateChanged(currentState = State::Busy);
-    bool result = pm->createPartition(slot, password.toStdString());
+    changeState(State::Busy);
+
+    try
+    {
+        try
+        {
+
+            pm->createPartition(slot, password.toStdString());
+            changeState(State::PartitionMounted);
+        }catch(CommandError &e){
+            emit errorOccurred(tr("An external command failed. Device will be ejected."));
+            throw e;
+        }catch(SysCallError &e){
+            QString errorMsg = tr("System call: \"");
+            errorMsg += QString(e.sysCall().c_str());
+            errorMsg += "\" failed with return code ";
+            errorMsg += QString::number(e.returnCode());
+            errorMsg += ".";
+
+            emit errorOccurred(errorMsg);
+            throw e;
+        }
+    }catch(std::exception &e){
+        pm->ejectDevice();
+        pm.reset(nullptr);
+        std::cerr << e.what() << std::endl;
+        changeState(State::NoDeviceSet);
+    }
+
+
     emit finished();
-    if(result)
-        emit stateChanged(currentState = State::PartitionMounted);
-    else
-        emit stateChanged(currentState = State::PartitionUnmounted);
+
+
 }
 
 void PartitionManagerAdapter::mountPartition(const QString password)
 {
-    emit stateChanged(currentState = State::Busy);
-    bool result = pm->mountPartition(password.toStdString());
-    emit finished();
-    if(result)
-        emit stateChanged(currentState = State::PartitionMounted);
-    else
-        emit stateChanged(currentState = State::PartitionUnmounted);
+    try
+    {
+        try
+        {
+            changeState(State::Busy);
+            if(pm->mountPartition(password.toStdString()))
+                changeState(State::PartitionMounted);
+            else
+                changeState(State::PartitionUnmounted);
 
+        }catch(std::domain_error &e){
+            emit errorOccurred(tr("Empty password."));
+            changeState(State::PartitionUnmounted);
+        }catch(CommandError &e){
+            emit errorOccurred(tr("An external command failed. Device will be ejected."));
+            throw e;
+        }catch(SysCallError &e){
+            QString errorMsg = tr("System call: \"");
+            errorMsg += QString(e.sysCall().c_str());
+            errorMsg += "\" failed with return code ";
+            errorMsg += QString::number(e.returnCode());
+            errorMsg += ".";
+
+            emit errorOccurred(errorMsg);
+            throw e;
+        }
+    }catch(std::exception &e){
+        pm->ejectDevice();
+        pm.reset(nullptr);
+        std::cerr << e.what() << std::endl;
+        changeState(State::NoDeviceSet);
+    }
+    emit finished();
 }
 
 void PartitionManagerAdapter::unmountPartition()
 {
-    emit stateChanged(currentState = State::Busy);
+    changeState(State::Busy);
     pm->unmountPartition();
-    emit stateChanged(currentState = State::PartitionUnmounted);
+    changeState(State::PartitionUnmounted);
 }
 
 void PartitionManagerAdapter::ejectDevice()
 {
-    emit stateChanged(currentState = State::Busy);
+    changeState(State::Busy);
     pm->ejectDevice();
     pm.reset(nullptr);
-    emit stateChanged(currentState = State::NoDeviceSet);
+    changeState(State::NoDeviceSet);
 }
 
 void PartitionManagerAdapter::abortOperation()
 {
     if(pm)
         pm->abortOperation();
+}
+
+void PartitionManagerAdapter::changeState(State state)
+{
+    emit stateChanged(currentState=state);
 }
