@@ -326,9 +326,17 @@ void PartitionManager::ejectDevice()
 
 bool PartitionManager::isWraparoundOurs()
 {
-    // FIXME
-    std::cerr << "isWraparoundOurs not yet implemented!" << std::endl;
-    return true;
+    const char * cmd = "dmsetup table wraparound";
+    FILE * output = popen(cmd,"r");
+    if(!output)
+        throw SysCallError("popen",errno);
+    std::vector<char> buffer(255);
+    fgets(buffer.data(),255,output);
+    pclose(output);
+
+    unsigned major, minor;
+    sscanf(buffer.data(),"%*d %*d %*s %ud:%ud %*d\n",&major,&minor);
+    return major == major(mFileStat.st_dev) && minor == minor(mFileStat.st_dev);
 }
 
 bool PartitionManager::callMount()
