@@ -182,6 +182,14 @@ public:
      */
     static const std::list<std::string> findAllDevices();
 
+    /*
+     * currentDevice:
+     *
+     * Devuelve el path al dispositivo que tenga el wraparound abierto. Si no
+     * hay ninguno, retorna una string vacía.
+     */
+    static const std::string currentDevice();
+
     static constexpr unsigned short SLOTS_AMOUNT = 8192;
     static const std::string WRAPAROUND;
     static const std::string MAPPER_DIR;
@@ -207,9 +215,10 @@ private:
     bool callMount();
     bool callUmount();
 
+    static const std::pair<unsigned,unsigned> currentDeviceID();
+
     static constexpr unsigned short BLOCK_SIZE_ = 512;
     const off_t MAX_TRANSFER_SIZE = 32 * (1 << (20-1)); // % 32 * MiB
-
 };
 
 

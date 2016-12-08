@@ -57,17 +57,20 @@ PartitionManager::PartitionManager(const std::string &device)
             throw std::runtime_error("Unknown error when opening device block file.");
      }else{
         unsigned long long size;
-        fstat(fd,&mFileStat);
+        if(fstat(fd,&mFileStat) == -1)
+            throw SysCallError("stat", errno);
 
         if(!S_ISBLK(mFileStat.st_mode))
             throw std::domain_error("Not a block file!");
         if(ioctl(fd, BLKGETSIZE64, &size)==-1)
             throw SysCallError("ioctl BLKGETSIZE64",errno);
-        
+
         mDeviceSize = size/BLOCK_SIZE_;
         mOffsetMultiple = mDeviceSize / SLOTS_AMOUNT;
         std::cerr << device << " has " << mDeviceSize << " blocks."
                 << std::endl;
+        std::cerr << "major " << major(mFileStat.st_rdev) << std::endl;
+        std::cerr << "minor " << minor(mFileStat.st_rdev) << std::endl;
      }
     close(fd);
 
@@ -326,17 +329,9 @@ void PartitionManager::ejectDevice()
 
 bool PartitionManager::isWraparoundOurs()
 {
-    const char * cmd = "dmsetup table wraparound";
-    FILE * output = popen(cmd,"r");
-    if(!output)
-        throw SysCallError("popen",errno);
-    std::vector<char> buffer(255);
-    fgets(buffer.data(),255,output);
-    pclose(output);
-
-    unsigned major, minor;
-    sscanf(buffer.data(),"%*d %*d %*s %ud:%ud %*d\n",&major,&minor);
-    return major == major(mFileStat.st_dev) && minor == minor(mFileStat.st_dev);
+    auto pair = currentDeviceID();
+    return (pair.first == major(mFileStat.st_rdev) &&
+           pair.second == minor(mFileStat.st_rdev));
 }
 
 bool PartitionManager::callMount()
@@ -370,8 +365,51 @@ const std::list<std::string> PartitionManager::findAllDevices()
            entry->d_name[1]=='d')
             list.push_back(std::string("/dev/") +entry->d_name);
     }
+    closedir(dirStream);
     list.sort();
     return list;
+}
+
+// wraparound tiene que estar abierto
+const std::pair<unsigned,unsigned> PartitionManager::currentDeviceID()
+{
+    const char * cmd = "dmsetup table wraparound";
+    FILE * output = popen(cmd,"r");
+    if(!output)
+        throw SysCallError("popen",errno);
+    std::vector<char> buffer(255);
+    fgets(buffer.data(),255,output);
+    pclose(output);
+
+    unsigned major, minor;
+    sscanf(buffer.data(),"%*d %*d %*s %d:%d %*d\n",&major,&minor);
+    return std::pair<int,int>(major,minor);
+}
+
+const std::string PartitionManager::currentDevice()
+{
+    if(!fileExists(MAPPER_DIR+WRAPAROUND))
+        return "";
+    auto devID = currentDeviceID();
+    struct stat walk;
+    for(auto &devicePath : findAllDevices())
+    {
+        if(stat(devicePath.c_str(),&walk) == -1)
+        {
+            std::cerr << "Could not stat " << devicePath << ":";
+            perror("");
+            continue;
+        }
+        if(S_ISBLK(walk.st_mode) &&
+           major(walk.st_rdev) == devID.first &&
+           minor(walk.st_rdev) == devID.second)
+        {
+            // encontramos el path del dispositivo
+            std::cerr << "Found device: " << devicePath << std::endl;
+            return devicePath;
+        }
+    }
+    return "";
 }
 
 PartitionManager::~PartitionManager()

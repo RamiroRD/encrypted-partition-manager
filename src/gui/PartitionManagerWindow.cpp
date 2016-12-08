@@ -24,6 +24,13 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
 {
     this->setupUI();
     this->setupPMA();
+
+    auto currentDevice = PartitionManager::currentDevice();
+    if(!currentDevice.empty())
+    {
+        setDevice(QString::fromStdString(currentDevice));
+        deviceSelector->setCurrentText(QString::fromStdString(currentDevice));
+    }
 }
 
 void PartitionManagerWindow::setupUI()
