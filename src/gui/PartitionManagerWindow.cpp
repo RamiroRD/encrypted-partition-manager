@@ -214,7 +214,8 @@ void PartitionManagerWindow::updateUI(const State state)
     createButton    ->setEnabled(state == State::PartitionUnmounted);
     mountButton     ->setEnabled(state == State::PartitionUnmounted);
     unmountButton   ->setEnabled(state == State::PartitionMounted);
-    ejectButton     ->setEnabled(state == State::PartitionUnmounted);
+    ejectButton     ->setEnabled(state == State::PartitionUnmounted ||
+                                 state == State::PartitionMounted);
     switch(state)
     {
     case State::NoDeviceSet:

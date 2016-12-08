@@ -169,6 +169,9 @@ void PartitionManagerAdapter::unmountPartition()
 
 void PartitionManagerAdapter::ejectDevice()
 {
+    if(currentState == State::PartitionMounted)
+        unmountPartition();
+
     changeState(State::Busy);
     pm->ejectDevice();
     pm.reset(nullptr);
