@@ -49,6 +49,7 @@ PartitionManager::PartitionManager(const std::string &device)
      int fd = open(device.c_str(),O_RDWR);
      if(fd == -1)
      {
+        perror("");
         if(errno == ENOENT)
             throw std::domain_error("No such device.");
         else if (errno == EPERM || errno == EACCES)
@@ -209,7 +210,7 @@ bool PartitionManager::wipeDevice()
                 throw SysCallError("write",errno);
             if(write(out,buffer.data(),amount) == -1)
                 throw SysCallError("read",errno);
-            mProgress = std::ceil(100 * i / deviceSize);
+            mProgress = std::floor(100 * i / deviceSize);
         }
         if(mOperationCanceled)
         {
