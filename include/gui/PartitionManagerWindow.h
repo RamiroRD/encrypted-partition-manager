@@ -33,6 +33,7 @@ class PartitionManagerWindow : public QMainWindow
     QThread pmaThread;
     void setupUI();
     void setupPMA();
+    void populateDeviceSelector();
 
 
 public:

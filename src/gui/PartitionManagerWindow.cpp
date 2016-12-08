@@ -2,7 +2,6 @@
 #include <QInputDialog>
 #include <QProgressDialog>
 #include <QApplication>
-#include <parted/parted.h>
 
 #include "gui/PartitionManagerWindow.h"
 #include "gui/CreateDialog.h"
@@ -59,19 +58,7 @@ void PartitionManagerWindow::setupUI()
     unmountButton->setDisabled(true);
     ejectButton->setDisabled(true);
 
-    {
-        ped_device_probe_all();
-        PedDevice * dev = ped_device_get_next(NULL);
-        while(dev != NULL)
-        {
-            std::string devPath = dev->path;
-            if(devPath != PartitionManager::MAPPER_DIR+PartitionManager::WRAPAROUND &&
-               devPath != PartitionManager::MAPPER_DIR+PartitionManager::ENCRYPTED)
-                deviceSelector->addItem(QString(dev->path));
-            dev = ped_device_get_next(dev);
-        }
-    }
-    deviceSelector->setCurrentIndex(-1);
+    populateDeviceSelector();
 }
 
 void PartitionManagerWindow::setupPMA()
@@ -225,7 +212,7 @@ void PartitionManagerWindow::updateUI(const State state)
     {
     case State::NoDeviceSet:
         this->deviceSelector->blockSignals(true);
-        this->deviceSelector->setCurrentIndex(-1);
+        this->populateDeviceSelector();
         this->deviceSelector->blockSignals(false);
         this->statusBar->showMessage(tr("No device selected."));
         break;
@@ -255,6 +242,15 @@ void PartitionManagerWindow::showErrorMessage(QString msg)
     QMessageBox::warning(this,
                          QObject::tr("An error occurred."),
                          msg);
+}
+
+void PartitionManagerWindow::populateDeviceSelector()
+{
+    deviceSelector->clear();
+    for(auto &devicePath : PartitionManager::findAllDevices())
+        deviceSelector->addItem(QString::fromStdString(devicePath));
+
+    deviceSelector->setCurrentIndex(-1);
 }
 
 PartitionManagerWindow::~PartitionManagerWindow()

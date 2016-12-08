@@ -8,6 +8,7 @@
 #include <string>
 #include <atomic>
 #include <mutex>
+#include <list>
 
 
 
@@ -168,10 +169,18 @@ public:
     /*
      * ejectDevice:
      *
-     * Si se llama este método en cualquier momento, el se ciera el
+     * Si se llama este método en cualquier momento, el se cierra el
      * wraparound y se desmonta la partición al destruirse la instancia.
      */
     void ejectDevice();
+
+    /*
+     * findAllDevices:
+     *
+     * Devuelve una lista de strings con los paths a todos los dispositivos
+     * SCSI.
+     */
+    static const std::list<std::string> findAllDevices();
 
     static constexpr unsigned short SLOTS_AMOUNT = 8192;
     static const std::string WRAPAROUND;

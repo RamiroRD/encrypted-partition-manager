@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <mntent.h>
+#include <dirent.h>
 
 #include <iostream>
 #include <sstream>
@@ -344,6 +345,25 @@ bool PartitionManager::callMount()
 bool PartitionManager::callUmount()
 {
     return (umount(MOUNTPOINT.c_str()) == 0);
+}
+
+const std::list<std::string> PartitionManager::findAllDevices()
+{
+    DIR * dirStream;
+    struct dirent * entry;
+    std::list<std::string> list;
+
+    if(!(dirStream = opendir("/dev")))
+        throw SysCallError("opendir(\"/dev\"", errno);
+    for(entry = readdir(dirStream); entry; entry = readdir(dirStream))
+    {
+        if(strlen(entry->d_name)==3 &&
+           entry->d_name[0] == 's' &&
+           entry->d_name[1]=='d')
+            list.push_back(std::string("/dev/") +entry->d_name);
+    }
+    list.sort();
+    return list;
 }
 
 PartitionManager::~PartitionManager()

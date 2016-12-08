@@ -22,8 +22,6 @@ HEADERS  += \
     include/gui/CreateDialog.h \
 	include/logic/PartitionManager.h
 
-LIBS += -lparted
-
 TRANSLATIONS = partmgr_es.ts
 
 
