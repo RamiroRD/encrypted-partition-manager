@@ -14,9 +14,6 @@ enum class State
     NoDeviceSet,
     PartitionMounted,
     PartitionUnmounted,
-    Wiping,
-    Unmounting,
-    Mounting,
     Busy
 };
 Q_DECLARE_METATYPE(State)

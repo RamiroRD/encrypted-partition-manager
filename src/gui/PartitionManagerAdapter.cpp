@@ -49,7 +49,7 @@ void PartitionManagerAdapter::wipeDevice()
 {
     try
     {
-        changeState(State::Wiping);
+        changeState(State::Busy);
         pm->resetProgress();
         mPollProgress = true;
         std::thread thr(&PartitionManagerAdapter::pollProgress,this);

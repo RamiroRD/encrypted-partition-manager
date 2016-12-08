@@ -230,15 +230,6 @@ void PartitionManagerWindow::updateUI(const State state)
     case State::PartitionUnmounted:
         this->statusBar->showMessage(tr("No partition mounted."));
         break;
-    case State::Mounting:
-        this->statusBar->showMessage(tr("Mounting partition..."));
-        break;
-    case State::Unmounting:
-        this->statusBar->showMessage(tr("Unmounting partition..."));
-        break;
-    case State::Wiping:
-        this->statusBar->showMessage(tr("Erasing partition..."));
-        break;
     case State::Busy:
         this->statusBar->showMessage(tr("Busy..."));
         break;
