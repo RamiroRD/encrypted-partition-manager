@@ -51,7 +51,8 @@ public slots:
 private:
     std::string currentDevice;
     State currentState;
-    short int currentProgress;
+    short int mCurrentProgress;
+    bool mPollProgress;
     std::unique_ptr<PartitionManager> pm;
     void changeState(State state);
 };
