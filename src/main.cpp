@@ -28,6 +28,14 @@ int main(int argc, char *argv[])
     a.setApplicationName(QObject::tr("Partition Manager"));
     a.setApplicationDisplayName(QObject::tr("Partition Manager"));
 
+    if(getuid()!=0)
+    {
+        QMessageBox::warning(nullptr,
+                             QObject::tr("Superuser privileges required."),
+                             QObject::tr("This program needs superuser privileges to access storage devices. Please run this program again as root."));
+        return -1;
+    }
+
     if(!isProcessUnique())
     {
         QMessageBox::warning(nullptr,
@@ -36,13 +44,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if(getuid()!=0)
-    {
-        QMessageBox::warning(nullptr,
-                             QObject::tr("Superuser privileges required."),
-                             QObject::tr("This program needs superuser privileges to access storage devices. Please run this program again as root."));
-        return -1;
-    }
+
 
     PartitionManagerWindow w;
     w.show();
