@@ -74,6 +74,10 @@ public:
      * device. device es el path de un archivo de bloque Unix. (por ejemplo,
      * /dev/sda).
      *
+     * Trata de desmontar todas las particiones montadas  que correspondan a
+     * este dispositivo. Si en desmontar alguna, el constructor falla y lanza
+     * una excepción.
+     *
      * Chequea que se tenga acceso de escritura al archivo de bloque, crea el
      * wraparound si no existe. El wraparound es un dispositivo virtual que
      * repite los contenidos del dispositivo device una vez, generando un
@@ -106,7 +110,7 @@ public:
      * escribiendo la cabezera del filesystem en el slot pasado.
      *
      * Retorna verdadero si crea exitosamente el filesystem y falso si ya hay
-     * una partición monatada, slot está fuera del rango [0,SLOTS_AMOUNT), si la
+     * una partición montada, slot está fuera del rango [0,SLOTS_AMOUNT), si la
      * contraseña es un string vacío o si algún comando interno falla.
      */
     bool createPartition(const unsigned short slot,
@@ -215,6 +219,7 @@ private:
     bool isWraparoundOurs();
     bool callMount();
     bool callUmount();
+    void unmountAll();
 
     static const std::pair<unsigned,unsigned> currentDeviceID();
 

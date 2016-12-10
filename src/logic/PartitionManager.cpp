@@ -35,7 +35,6 @@ static bool fileExists(const std::string &path)
     return f.good();
 }
 
-
 PartitionManager::PartitionManager(const std::string &device)
     : mDeviceSize(0),
       mOffsetMultiple(0),
@@ -48,7 +47,9 @@ PartitionManager::PartitionManager(const std::string &device)
      * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
      * una excepción que debería manejarse desde el caller del constructor.
      */
+     unmountAll();
      int fd = open(device.c_str(),O_RDWR);
+
      if(fd == -1)
      {
         perror("");
@@ -281,12 +282,9 @@ bool PartitionManager::mountPartition(const std::string &password)
     bool success = false;
     for (unsigned short i = 0; i < SLOTS_AMOUNT && !success; i++)
     {
-        if(mOperationCanceled)
-        {
-            std::cerr << "Mount operation canceled." << std::endl;
-            mOperationCanceled = false;
+        if(mOperationCanceled)  
             break;
-        }
+
         closeMapping(ENCRYPTED);
         openCryptMapping(i, password);
 
@@ -295,7 +293,17 @@ bool PartitionManager::mountPartition(const std::string &password)
         else
             closeMapping(ENCRYPTED);
     }
-    return success;
+    if(mOperationCanceled)
+    {
+        std::cerr << "Mount operation canceled." << std::endl;
+        mOperationCanceled = false;
+        closeMapping(ENCRYPTED);
+        return false;
+    }
+    if(!success)
+        throw PartitionNotFoundException();
+
+    return true;
 }
 
 bool PartitionManager::unmountPartition()
@@ -416,6 +424,31 @@ const std::string PartitionManager::currentDevice()
         }
     }
     return "";
+}
+
+void PartitionManager::unmountAll()
+{
+    std::string line;
+    std::cerr << "Trying to unmount all mountpoints of " << mCurrentDevice << std::endl;
+    std::ifstream mountFile("/proc/mounts");
+    if(!mountFile.is_open())
+        return;
+    for(std::getline(mountFile,line); !line.empty(); std::getline(mountFile,line))
+    {
+        std::stringstream ss(line);
+        std::string device;
+        ss >> device;
+
+        if(device.find(mCurrentDevice) != std::string::npos)
+        {
+            std::string mountpoint;
+            ss >> mountpoint;
+            if(umount(mountpoint.c_str()) == 0)
+                std::cerr << mountpoint << " unmounted." << std::endl;
+            else
+                std::cerr << "Failed to unmount " << mountpoint << "." << std::endl;
+        }
+    }
 }
 
 PartitionManager::~PartitionManager()
