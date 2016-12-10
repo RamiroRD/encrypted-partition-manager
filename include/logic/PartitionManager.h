@@ -219,7 +219,7 @@ private:
     static const std::pair<unsigned,unsigned> currentDeviceID();
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    const uint64_t MAX_TRANSFER_SIZE = 32 * (1 << (20-1)); // % 32 * MiB
+    const uint64_t MAX_WRITE_SIZE = 1 * (1 << (20-1)); // % 1 MiB
 };
 
 

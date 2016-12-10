@@ -1,5 +1,7 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <syscall.h>
+#include <linux/random.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
@@ -185,12 +187,16 @@ bool PartitionManager::wipeDevice()
     if(mProgress != 0)
         throw std::logic_error("resetProgress() not previously called!");
 
-    std::string path = MAPPER_DIR+WRAPAROUND;
+    std::vector<char> key(256);
+    key[256] = '\0';
+    if(255 != syscall(SYS_getrandom,key.data(),255,0))
+    {
+        perror("Couldn't generate random key");
+        throw SysCallError("getrandom",errno);
+    }
 
-    int in  = open("/dev/urandom", O_RDONLY);
-    int out = open(path.c_str(), O_WRONLY);
-    if(in == -1)
-        throw SysCallError("open",errno);
+    openCryptMapping(0,std::string(key.begin(),key.end()));
+    int out = open((MAPPER_DIR+ENCRYPTED).c_str(), O_WRONLY);
     if(out == -1)
         throw SysCallError("open",errno);
 
@@ -198,18 +204,16 @@ bool PartitionManager::wipeDevice()
 
     try
     {
-        const auto deviceSize = mDeviceSize * BLOCK_SIZE;
-        std::vector<char> buffer(MAX_TRANSFER_SIZE,'\0');
+        const uint64_t deviceSize = mDeviceSize * BLOCK_SIZE_;
+        std::vector<char> buffer(MAX_WRITE_SIZE,'\0');
         mProgress = 0;
-        unsigned amount = std::min(deviceSize, MAX_TRANSFER_SIZE);
+        unsigned amount = std::min(deviceSize, MAX_WRITE_SIZE);
         for (uint64_t i = 0;
              i < deviceSize && !mOperationCanceled;
-             i += (amount = std::min(deviceSize - i, MAX_TRANSFER_SIZE)))
+             i += (amount = std::min(deviceSize - i, MAX_WRITE_SIZE)))
         {
-            if(read(in,buffer.data(),amount) == -1)
-                throw SysCallError("write",errno);
             if(write(out,buffer.data(),amount) == -1)
-                throw SysCallError("read",errno);
+                throw SysCallError("write",errno);
             mProgress = std::floor(100 * i / deviceSize);
         }
         if(mOperationCanceled)
@@ -218,15 +222,16 @@ bool PartitionManager::wipeDevice()
             mOperationCanceled = false;
         }
         mProgress = 100;
-    }catch(SysCallError &e){
-        close(in);
+        std::cerr << "Device wiped." << std::endl;
         close(out);
+        closeMapping(ENCRYPTED);
+    }catch(SysCallError &e){
+        close(out);
+        closeMapping(ENCRYPTED);
         throw e;
-    }
-    close(in);
-    close(out);
+    };
 
-    std::cerr << "Device wiped." << std::endl;
+
     return true;
 
 }
