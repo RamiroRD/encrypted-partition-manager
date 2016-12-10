@@ -225,7 +225,8 @@ void PartitionManagerWindow::updateUI(const State state)
         this->statusBar->showMessage(tr("No device selected."));
         break;
     case State::PartitionMounted:
-        this->statusBar->showMessage(tr("Partition mounted."));
+        this->statusBar->showMessage(tr("Partition mounted on ") +
+                                     QString::fromStdString(PartitionManager::MOUNTPOINT));
         break;
     case State::PartitionUnmounted:
         this->statusBar->showMessage(tr("No partition mounted."));
