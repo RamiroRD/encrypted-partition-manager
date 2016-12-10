@@ -147,7 +147,7 @@ bool PartitionManager::isMountPoint(const std::string &dirPath)
 void PartitionManager::openCryptMapping(const unsigned short slot,
                                         const std::string &password)
 {
-    const off_t offset = slot * mOffsetMultiple;
+    const uint64_t offset = slot * mOffsetMultiple;
     std::stringstream ss;
     ss << "cryptsetup --hash=sha512 --cipher=aes-xts-plain64";
     ss << " --offset " << offset;
@@ -202,7 +202,7 @@ bool PartitionManager::wipeDevice()
         std::vector<char> buffer(MAX_TRANSFER_SIZE,'\0');
         mProgress = 0;
         unsigned amount = std::min(deviceSize, MAX_TRANSFER_SIZE);
-        for (volatile off_t i = 0;
+        for (uint64_t i = 0;
              i < deviceSize && !mOperationCanceled;
              i += (amount = std::min(deviceSize - i, MAX_TRANSFER_SIZE)))
         {

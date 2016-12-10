@@ -9,6 +9,7 @@
 #include <atomic>
 #include <mutex>
 #include <list>
+#include <cstdint>
 
 
 
@@ -197,8 +198,8 @@ public:
     static const std::string MOUNTPOINT;
 private:
     // Ambos en bloques 
-    off_t                       mDeviceSize;
-    off_t                       mOffsetMultiple;
+    uint64_t                       mDeviceSize;
+    uint64_t                       mOffsetMultiple;
     std::string                 mCurrentDevice;
     std::atomic<unsigned short> mProgress;
     std::atomic<bool>           mOperationCanceled;
@@ -218,7 +219,7 @@ private:
     static const std::pair<unsigned,unsigned> currentDeviceID();
 
     static constexpr unsigned short BLOCK_SIZE_ = 512;
-    const off_t MAX_TRANSFER_SIZE = 32 * (1 << (20-1)); // % 32 * MiB
+    const uint64_t MAX_TRANSFER_SIZE = 32 * (1 << (20-1)); // % 32 * MiB
 };
 
 
