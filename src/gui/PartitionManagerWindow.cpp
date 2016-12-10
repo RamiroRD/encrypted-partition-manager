@@ -29,7 +29,9 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
     if(!currentDevice.empty())
     {
         setDevice(QString::fromStdString(currentDevice));
+        deviceSelector->blockSignals(true);
         deviceSelector->setCurrentText(QString::fromStdString(currentDevice));
+        deviceSelector->blockSignals(false);
     }
 }
 
