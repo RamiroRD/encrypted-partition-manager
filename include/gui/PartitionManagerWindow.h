@@ -2,10 +2,10 @@
 #define PARTITIONMANAGERWINDOW_H
 
 #include <QMainWindow>
-#include <QGridLayout>
 #include <QLabel>
 #include <QComboBox>
 #include <QPushButton>
+#include <QToolButton>
 #include <QProgressBar>
 #include <QStatusBar>
 #include <QThread>
@@ -20,9 +20,9 @@ class PartitionManagerWindow : public QMainWindow
     PartitionManagerAdapter * pma;
 
     QWidget * centralWidget;
-    QGridLayout     * gridLayout;
     QLabel          * deviceLabel;
     QComboBox       * deviceSelector;
+    QToolButton     * refreshButton;
     QPushButton     * wipeButton;
     QPushButton     * createButton;
     QPushButton     * mountButton;
@@ -33,7 +33,7 @@ class PartitionManagerWindow : public QMainWindow
     QThread pmaThread;
     void setupUI();
     void setupPMA();
-    void populateDeviceSelector();
+
 
 
 public:
@@ -56,6 +56,7 @@ public slots:
     void ejectDevice();
     void updateUI(const State state);
     void showErrorMessage(QString msg);
+    void populateDeviceSelector();
 };
 
 #endif // PARTITIONMANAGERWINDOW_H

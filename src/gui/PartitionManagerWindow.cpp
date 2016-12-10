@@ -2,6 +2,9 @@
 #include <QInputDialog>
 #include <QProgressDialog>
 #include <QApplication>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+
 
 #include "gui/PartitionManagerWindow.h"
 #include "gui/CreateDialog.h"
@@ -12,9 +15,9 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
     : QMainWindow(parent),
       pma               (new PartitionManagerAdapter()), // Tiene que no tener padre!
       centralWidget     (new QWidget()),
-      gridLayout        (new QGridLayout()),
       deviceLabel       (new QLabel(tr("Device:"))),
       deviceSelector    (new QComboBox(centralWidget)),
+      refreshButton     (new QToolButton()),
       wipeButton        (new QPushButton(tr("Erase device"))),
       createButton      (new QPushButton(tr("Create partition"))),
       mountButton       (new QPushButton(tr("Mount partition"))),
@@ -25,6 +28,7 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
     this->setupUI();
     this->setupPMA();
 
+    populateDeviceSelector();
     auto currentDevice = PartitionManager::currentDevice();
     if(!currentDevice.empty())
     {
@@ -38,14 +42,27 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
 void PartitionManagerWindow::setupUI()
 {
     this->setWindowTitle(tr("Partition Manager"));
+    this->layout()->setSizeConstraint(QLayout::SetFixedSize);
+    QVBoxLayout * mainLayout = new QVBoxLayout();
+    QHBoxLayout * buttonsRow = new QHBoxLayout();
+    QHBoxLayout * selectorRow = new QHBoxLayout();
 
-    gridLayout->addWidget(deviceLabel,      0,0,1,-1);
-    gridLayout->addWidget(deviceSelector,   1,0,1,-1);
-    gridLayout->addWidget(wipeButton,       2,0,1, 1);
-    gridLayout->addWidget(createButton,     2,1,1, 1);
-    gridLayout->addWidget(mountButton,      2,2,1, 1);
-    gridLayout->addWidget(unmountButton,    2,3,1, 1);
-    gridLayout->addWidget(ejectButton,      2,4,1, 1);
+
+    selectorRow->addWidget(deviceSelector);
+    selectorRow->addWidget(refreshButton);
+
+    buttonsRow->addWidget(wipeButton);
+    buttonsRow->addWidget(createButton);
+    buttonsRow->addWidget(mountButton);
+    buttonsRow->addWidget(unmountButton);
+    buttonsRow->addWidget(ejectButton);
+
+    mainLayout->addWidget(deviceLabel);
+    mainLayout->addLayout(selectorRow);
+    mainLayout->addLayout(buttonsRow);
+
+
+    refreshButton->setIcon(QIcon::fromTheme(QString("view-refresh")));
 
     deviceLabel->setSizePolicy(QSizePolicy());
     /*
@@ -56,7 +73,7 @@ void PartitionManagerWindow::setupUI()
      * setLayout hace que centralWidget los "adopte".
      * setCentralWidget hace lo mismo con centralWidget.
      */
-    centralWidget->setLayout(gridLayout);
+    centralWidget->setLayout(mainLayout);
     this->setCentralWidget(centralWidget);
     this->setStatusBar(statusBar);
     statusBar->showMessage(tr("Select a device."));
@@ -66,19 +83,6 @@ void PartitionManagerWindow::setupUI()
     mountButton->setDisabled(true);
     unmountButton->setDisabled(true);
     ejectButton->setDisabled(true);
-
-    populateDeviceSelector();
-}
-
-void PartitionManagerWindow::setupPMA()
-{
-    /*
-     * Las llamadas a los métodos del PMA se hacen usando signals y slots.
-     * Esta es la "forma Qt" de hacer llamadas a métodos en otro Thread;
-     * El objeto "reside" en el otro thread y hacer llamadas directas no
-     * cambia de threads.
-     */
-    pma->moveToThread(&pmaThread);
 
 
     /*
@@ -97,6 +101,21 @@ void PartitionManagerWindow::setupPMA()
             this,&PartitionManagerWindow::unmountPartition);
     connect(ejectButton,&QPushButton::clicked,
             this,&PartitionManagerWindow::ejectDevice);
+    connect(refreshButton,&QToolButton::clicked,
+            this,&PartitionManagerWindow::populateDeviceSelector);
+
+}
+
+void PartitionManagerWindow::setupPMA()
+{
+    /*
+     * Las llamadas a los métodos del PMA se hacen usando signals y slots.
+     * Esta es la "forma Qt" de hacer llamadas a métodos en otro Thread;
+     * El objeto "reside" en el otro thread y hacer llamadas directas no
+     * cambia de threads.
+     */
+    pma->moveToThread(&pmaThread);
+
 
     /*
      * Conectamos las señales que se emiten al momento de necesitar métodos de
@@ -218,10 +237,12 @@ void PartitionManagerWindow::updateUI(const State state)
     unmountButton   ->setEnabled(state == State::PartitionMounted);
     ejectButton     ->setEnabled(state == State::PartitionUnmounted ||
                                  state == State::PartitionMounted);
+    refreshButton   ->setEnabled(state == State::NoDeviceSet);
     switch(state)
     {
     case State::NoDeviceSet:
         this->deviceSelector->blockSignals(true);
+        this->deviceSelector->setCurrentIndex(-1);
         this->populateDeviceSelector();
         this->deviceSelector->blockSignals(false);
         this->statusBar->showMessage(tr("No device selected."));
@@ -248,11 +269,15 @@ void PartitionManagerWindow::showErrorMessage(QString msg)
 
 void PartitionManagerWindow::populateDeviceSelector()
 {
+    QString previous = deviceSelector->currentText();
+    deviceSelector->blockSignals(true);
     deviceSelector->clear();
     for(auto &devicePath : PartitionManager::findAllDevices())
         deviceSelector->addItem(QString::fromStdString(devicePath));
 
-    deviceSelector->setCurrentIndex(-1);
+
+    deviceSelector->setCurrentIndex(deviceSelector->findText(previous, Qt::MatchExactly));
+    deviceSelector->blockSignals(false);
 }
 
 PartitionManagerWindow::~PartitionManagerWindow()
