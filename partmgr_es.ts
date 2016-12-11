@@ -19,7 +19,7 @@
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="32"/>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="97"/>
-        <location filename="src/gui/PartitionManagerAdapter.cpp" line="138"/>
+        <location filename="src/gui/PartitionManagerAdapter.cpp" line="141"/>
         <source>System call: &quot;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -35,8 +35,8 @@
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="94"/>
-        <location filename="src/gui/PartitionManagerAdapter.cpp" line="135"/>
-        <location filename="src/gui/PartitionManagerAdapter.cpp" line="166"/>
+        <location filename="src/gui/PartitionManagerAdapter.cpp" line="138"/>
+        <location filename="src/gui/PartitionManagerAdapter.cpp" line="169"/>
         <source>An external command failed. Device will be ejected.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -46,7 +46,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerAdapter.cpp" line="164"/>
+        <location filename="src/gui/PartitionManagerAdapter.cpp" line="135"/>
+        <source>No partition found encrypted with this password.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/gui/PartitionManagerAdapter.cpp" line="167"/>
         <source>Unmount system called failed.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -54,103 +59,103 @@
 <context>
     <name>PartitionManagerWindow</name>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="16"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="18"/>
         <source>Device:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="18"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="21"/>
         <source>Erase device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="19"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="22"/>
         <source>Create partition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="20"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="23"/>
         <source>Mount partition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="21"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="24"/>
         <source>Unmount partition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="22"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="25"/>
         <source>Eject device</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="38"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="44"/>
         <source>Partition Manager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="60"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="79"/>
         <source>Select a device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="142"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="163"/>
         <source>Confirm</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="147"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="168"/>
         <source>Erasing volume.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="166"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="187"/>
         <source>Creating partition...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="183"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="204"/>
         <source>Enter password</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="184"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="205"/>
         <source>Password:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="188"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="209"/>
         <source>Searching partition...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="147"/>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="188"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="251"/>
+        <source>Partition mounted on </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="168"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="209"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="143"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="164"/>
         <source>Do you want to erase all contents from this device? This can be a lengthy operation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="225"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="248"/>
         <source>No device selected.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="228"/>
-        <source>Partition mounted.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="231"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="255"/>
         <source>No partition mounted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="234"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="258"/>
         <source>Busy...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -158,23 +163,33 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="src/main.cpp" line="21"/>
-        <location filename="src/main.cpp" line="22"/>
+        <location filename="src/main.cpp" line="28"/>
+        <location filename="src/main.cpp" line="29"/>
         <source>Partition Manager</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="31"/>
+        <location filename="src/main.cpp" line="34"/>
         <source>Superuser privileges required.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="32"/>
+        <location filename="src/main.cpp" line="35"/>
         <source>This program needs superuser privileges to access storage devices. Please run this program again as root.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="242"/>
+        <location filename="src/main.cpp" line="42"/>
+        <source>Another instance is open</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/main.cpp" line="43"/>
+        <source>There is another instance of this program running. Running multiple instances is not supported.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="266"/>
         <source>An error occurred.</source>
         <translation type="unfinished"></translation>
     </message>
