@@ -131,6 +131,9 @@ void PartitionManagerAdapter::mountPartition(const QString password)
         }catch(std::domain_error &e){
             emit errorOccurred(tr("Empty password."));
             changeState(State::PartitionUnmounted);
+        }catch(PartitionNotFoundException &e){
+            emit errorOccurred(tr("No partition found encrypted with this password."));
+            changeState(State::PartitionUnmounted);
         }catch(CommandError &e){
             emit errorOccurred(tr("An external command failed. Device will be ejected."));
             throw e;
