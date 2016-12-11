@@ -13,14 +13,18 @@ SOURCES += src/main.cpp \
     src/gui/PartitionManagerWindow.cpp \
     src/gui/PartitionManagerAdapter.cpp \
     src/gui/CreateDialog.cpp \
-	src/logic/PartitionManager.cpp
+	src/logic/PartitionManager.cpp \
+    src/logic/Crypto.cpp
 
 
 HEADERS  += \
     include/gui/PartitionManagerWindow.h \
     include/gui/PartitionManagerAdapter.h \
     include/gui/CreateDialog.h \
-	include/logic/PartitionManager.h
+	include/logic/PartitionManager.h \
+    include/logic/Crypto.h
+
+LIBS += -lssl -lcrypto
 
 TRANSLATIONS = partmgr_es.ts
 
