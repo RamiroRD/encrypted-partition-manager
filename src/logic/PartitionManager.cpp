@@ -152,7 +152,7 @@ void PartitionManager::openCryptMapping(const unsigned short slot,
 {
     const uint64_t offset = slot * mOffsetMultiple;
     std::stringstream ss;
-    ss << "cryptsetup --hash=sha512 --cipher=aes-xts-plain64";
+    ss << "cryptsetup --hash=sha512 --cipher=aes-xts-plain64 --key-size=512";
     ss << " --offset " << offset;
     ss << " open --size " << mDeviceSize;
     ss << " --type=plain " << MAPPER_DIR << WRAPAROUND;
