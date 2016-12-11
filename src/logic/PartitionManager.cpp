@@ -41,7 +41,8 @@ PartitionManager::PartitionManager(const std::string &device)
       mCurrentDevice(device),
       mProgress(0),
       mOperationCanceled(false),
-      mCloseAtDestroy(false)
+      mCloseAtDestroy(false),
+      mCrypto()
 {
     /*
      * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
@@ -274,36 +275,55 @@ bool PartitionManager::mountPartition(const std::string &password)
     if(password.empty())
         throw std::domain_error("Empty password.");
 
-    /*
-     * Cerramos el mapping de cifrado en cada vuelta y volvemos a abrir con 
-     * las password pasada hasta poder montar un sistema de archivos FAT. 
-     */
+    int fd = open((MAPPER_DIR+WRAPAROUND).c_str(), O_RDONLY);
+    if(fd == -1)
+        throw SysCallError("open",errno);
+
+
     std::cerr << "Searching partition..." << std::endl;
-    bool success = false;
-    for (unsigned short i = 0; i < SLOTS_AMOUNT && !success; i++)
+    std::vector<char> header(512);
+    bool found = false;
+    unsigned short successfulSlot;
+    for (unsigned short i = 0; i < SLOTS_AMOUNT; i++)
     {
         if(mOperationCanceled)  
             break;
 
-        closeMapping(ENCRYPTED);
-        openCryptMapping(i, password);
+        lseek(fd,i*mOffsetMultiple*BLOCK_SIZE_,SEEK_SET);
+        read(fd,header.data(),512);
 
-        if((success = callMount()))
-            std::cerr << "Partition found and mounted." << std::endl;
-        else
-            closeMapping(ENCRYPTED);
+        std::vector<char> decryptedHeader = mCrypto.decryptMessage(header,password);
+        if(decryptedHeader[510] == (char) 0x55 &&
+           decryptedHeader[511] == (char) 0xAA)
+        {
+            std::cerr << "FAT signature found!" << std::endl;
+            successfulSlot = i;
+            found = true;
+            break;
+        }
     }
+    close(fd);
     if(mOperationCanceled)
     {
         std::cerr << "Mount operation canceled." << std::endl;
         mOperationCanceled = false;
-        closeMapping(ENCRYPTED);
-        return false;
     }
-    if(!success)
+    if(found)
+    {
+        openCryptMapping(successfulSlot, password);
+        if(callMount())
+        {
+            std::cerr << "Partition mounted." << std::endl;
+            return true;
+        }
+        else
+            throw SysCallError("mount");
+    }else
+    {
+        std::cerr << "FAT signature not found." << std::endl;
         throw PartitionNotFoundException();
-
-    return true;
+    }
+    return found;
 }
 
 bool PartitionManager::unmountPartition()

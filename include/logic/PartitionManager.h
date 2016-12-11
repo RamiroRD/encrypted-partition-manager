@@ -11,6 +11,8 @@
 #include <list>
 #include <cstdint>
 
+#include <logic/Crypto.h>
+
 
 
 struct CommandError : public std::runtime_error
@@ -210,6 +212,7 @@ private:
     std::mutex                  mGuard;
     bool                        mCloseAtDestroy;
     struct stat                 mFileStat;
+    Crypto  mCrypto;
 
     void closeMapping(const std::string&);
     void openCryptMapping(const unsigned short slot,
