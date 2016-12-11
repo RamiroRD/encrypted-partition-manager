@@ -216,6 +216,7 @@ bool PartitionManager::wipeDevice()
         {
             if(write(out,buffer.data(),amount) == -1)
                 throw SysCallError("write",errno);
+            fsync(out);
             mProgress = std::floor(100 * i / deviceSize);
         }
         if(mOperationCanceled)
