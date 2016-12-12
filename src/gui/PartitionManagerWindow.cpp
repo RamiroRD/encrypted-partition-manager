@@ -4,7 +4,7 @@
 #include <QApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-
+#include <QStringList>
 
 #include "gui/PartitionManagerWindow.h"
 #include "gui/CreateDialog.h"
@@ -16,8 +16,8 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
       pma               (new PartitionManagerAdapter()), // Tiene que no tener padre!
       centralWidget     (new QWidget()),
       deviceLabel       (new QLabel(tr("Device:"))),
-      deviceSelector    (new QComboBox(centralWidget)),
       refreshButton     (new QToolButton()),
+      deviceSelector    (new QListWidget()),
       wipeButton        (new QPushButton(tr("Erase device"))),
       createButton      (new QPushButton(tr("Create partition"))),
       mountButton       (new QPushButton(tr("Mount partition"))),
@@ -28,15 +28,11 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
     this->setupUI();
     this->setupPMA();
 
-    populateDeviceSelector();
     auto currentDevice = PartitionManager::currentDevice();
     if(!currentDevice.empty())
-    {
-        setDevice(QString::fromStdString(currentDevice));
-        deviceSelector->blockSignals(true);
-        deviceSelector->setCurrentText(QString::fromStdString(currentDevice));
-        deviceSelector->blockSignals(false);
-    }
+        setDevicePath(QString::fromStdString(currentDevice));
+    else
+        populateDeviceSelector();
 }
 
 void PartitionManagerWindow::setupUI()
@@ -46,7 +42,6 @@ void PartitionManagerWindow::setupUI()
     QVBoxLayout * mainLayout = new QVBoxLayout();
     QHBoxLayout * buttonsRow = new QHBoxLayout();
     QHBoxLayout * selectorRow = new QHBoxLayout();
-
 
     selectorRow->addWidget(deviceSelector);
     selectorRow->addWidget(refreshButton);
@@ -60,7 +55,6 @@ void PartitionManagerWindow::setupUI()
     mainLayout->addWidget(deviceLabel);
     mainLayout->addLayout(selectorRow);
     mainLayout->addLayout(buttonsRow);
-
 
     refreshButton->setIcon(QIcon::fromTheme(QString("view-refresh")));
 
@@ -83,14 +77,21 @@ void PartitionManagerWindow::setupUI()
     mountButton->setDisabled(true);
     unmountButton->setDisabled(true);
     ejectButton->setDisabled(true);
+    wipeButton->setAutoDefault(true);
+    createButton->setAutoDefault(true);
+    mountButton->setAutoDefault(true);
+    unmountButton->setAutoDefault(true);
+    ejectButton->setAutoDefault(true);
 
 
     /*
      * Conectamos los botones del esta GUI a los métodos que toman las primeras
      * acciones, como pedir entrada y verificarlas.
      */
-    connect(deviceSelector,&QComboBox::currentTextChanged,
-            this,&PartitionManagerWindow::setDevice);
+    //connect(deviceSelector,&QComboBox::currentTextChanged,
+     //       this,&PartitionManagerWindow::setDevice);
+    connect(deviceSelector, &QListWidget::itemActivated,
+            this, &PartitionManagerWindow::setDevice);
     connect(wipeButton,&QPushButton::clicked,
             this,&PartitionManagerWindow::wipeDevice);
     connect(createButton,&QPushButton::clicked,
@@ -122,7 +123,6 @@ void PartitionManagerWindow::setupPMA()
      * PMA. Los métodos públicos en PMA son todos slots y por eso necesitamos
      * señales locales.
      */
-    // Habría que usar QueuedConnection?
     connect(this, &PartitionManagerWindow::devChangeRequested,
             pma, &PartitionManagerAdapter::setDevice);
     connect(this, &PartitionManagerWindow::wipeRequested,
@@ -152,9 +152,14 @@ void PartitionManagerWindow::setupPMA()
 
 }
 
-void PartitionManagerWindow::setDevice(const QString& devName)
+void PartitionManagerWindow::setDevicePath(const QString &dev)
 {
-    emit devChangeRequested(devName);
+    emit devChangeRequested(dev);
+}
+
+void PartitionManagerWindow::setDevice(const QListWidgetItem * item)
+{
+    emit devChangeRequested(item->text());
 }
 
 void PartitionManagerWindow::wipeDevice()
@@ -241,17 +246,16 @@ void PartitionManagerWindow::updateUI(const State state)
     switch(state)
     {
     case State::NoDeviceSet:
-        this->deviceSelector->blockSignals(true);
-        this->deviceSelector->setCurrentIndex(-1);
-        this->populateDeviceSelector();
-        this->deviceSelector->blockSignals(false);
+        populateDeviceSelector();
         this->statusBar->showMessage(tr("No device selected."));
         break;
     case State::PartitionMounted:
+        populateDeviceSelector();
         this->statusBar->showMessage(tr("Partition mounted on ") +
                                      QString::fromStdString(PartitionManager::MOUNTPOINT));
         break;
     case State::PartitionUnmounted:
+        populateDeviceSelector();
         this->statusBar->showMessage(tr("No partition mounted."));
         break;
     case State::Busy:
@@ -269,15 +273,24 @@ void PartitionManagerWindow::showErrorMessage(QString msg)
 
 void PartitionManagerWindow::populateDeviceSelector()
 {
-    QString previous = deviceSelector->currentText();
-    deviceSelector->blockSignals(true);
+
+    QListWidgetItem * previous = deviceSelector->currentItem();
+    QString previousDev;
+    if(previous != nullptr)
+        QString previousDev = previous->text();
+
     deviceSelector->clear();
     for(auto &devicePath : PartitionManager::findAllDevices())
         deviceSelector->addItem(QString::fromStdString(devicePath));
 
+    auto currentDevice = PartitionManager::currentDevice();
+    if(!currentDevice.empty())
+        previousDev = QString::fromStdString(currentDevice);
 
-    deviceSelector->setCurrentIndex(deviceSelector->findText(previous, Qt::MatchExactly));
-    deviceSelector->blockSignals(false);
+    auto list = deviceSelector->findItems(previousDev, Qt::MatchExactly);
+    if(!list.empty())
+        deviceSelector->setCurrentItem(list.first());
+
 }
 
 PartitionManagerWindow::~PartitionManagerWindow()

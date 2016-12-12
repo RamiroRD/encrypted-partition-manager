@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
-#include <QComboBox>
+#include <QListWidget>
 #include <QPushButton>
 #include <QToolButton>
 #include <QProgressBar>
@@ -21,8 +21,8 @@ class PartitionManagerWindow : public QMainWindow
 
     QWidget * centralWidget;
     QLabel          * deviceLabel;
-    QComboBox       * deviceSelector;
     QToolButton     * refreshButton;
+    QListWidget     * deviceSelector;
     QPushButton     * wipeButton;
     QPushButton     * createButton;
     QPushButton     * mountButton;
@@ -30,11 +30,12 @@ class PartitionManagerWindow : public QMainWindow
     QPushButton     * ejectButton;
     QStatusBar      * statusBar;
 
+
+
     QThread pmaThread;
     void setupUI();
     void setupPMA();
-
-
+    void setDevicePath(const QString &);
 
 public:
     explicit PartitionManagerWindow(QWidget *parent = 0);
@@ -48,7 +49,7 @@ signals:
     void unmountRequested();
     void ejectRequested();
 public slots:
-    void setDevice(const QString& devName);
+    void setDevice(const QListWidgetItem * item);
     void wipeDevice();
     void createPartition();
     void mountPartition();
