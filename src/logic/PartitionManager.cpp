@@ -17,7 +17,6 @@
 #include <cstdio>
 #include <cmath>
 #include <cstring>
-#include <parted/parted.h>
 
 
 #include "logic/PartitionManager.h"
@@ -191,11 +190,11 @@ bool PartitionManager::wipeDevice()
 
     std::vector<char> key(256);
     key[256] = '\0';
-    if(255 != syscall(SYS_getrandom,key.data(),255,0))
-    {
-        perror("Couldn't generate random key");
-        throw SysCallError("getrandom",errno);
-    }
+    int random = open("/dev/urandom", O_RDONLY);
+    if(random == -1)
+        throw SysCallError("open",errno);
+    read(random,key.data(),255);
+    close(random);
 
     openCryptMapping(0,std::string(key.begin(),key.end()));
     int out = open((MAPPER_DIR+ENCRYPTED).c_str(), O_WRONLY);
