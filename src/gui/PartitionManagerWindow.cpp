@@ -16,13 +16,13 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
       pma               (new PartitionManagerAdapter()), // Tiene que no tener padre!
       centralWidget     (new QWidget()),
       deviceLabel       (new QLabel(tr("Device:"))),
-      refreshButton     (new QToolButton()),
+      refreshButton     (new QPushButton(tr("&Refresh"))),
       deviceSelector    (new QListWidget()),
-      wipeButton        (new QPushButton(tr("Erase device"))),
-      createButton      (new QPushButton(tr("Create partition"))),
-      mountButton       (new QPushButton(tr("Mount partition"))),
-      unmountButton     (new QPushButton(tr("Unmount partition"))),
-      ejectButton       (new QPushButton(tr("Eject device"))),
+      wipeButton        (new QPushButton(tr("&Erase device"))),
+      createButton      (new QPushButton(tr("&Create partition"))),
+      mountButton       (new QPushButton(tr("&Mount partition"))),
+      unmountButton     (new QPushButton(tr("&Unmount partition"))),
+      ejectButton       (new QPushButton(tr("E&ject device"))),
       statusBar         (new QStatusBar())
 {
     this->setupUI();
@@ -38,13 +38,9 @@ PartitionManagerWindow::PartitionManagerWindow(QWidget *parent)
 void PartitionManagerWindow::setupUI()
 {
     this->setWindowTitle(tr("Partition Manager"));
-    this->layout()->setSizeConstraint(QLayout::SetFixedSize);
+    //this->layout()->setSizeConstraint(QLayout::SetFixedSize);
     QVBoxLayout * mainLayout = new QVBoxLayout();
     QHBoxLayout * buttonsRow = new QHBoxLayout();
-    QHBoxLayout * selectorRow = new QHBoxLayout();
-
-    selectorRow->addWidget(deviceSelector);
-    selectorRow->addWidget(refreshButton);
 
     buttonsRow->addWidget(wipeButton);
     buttonsRow->addWidget(createButton);
@@ -53,10 +49,9 @@ void PartitionManagerWindow::setupUI()
     buttonsRow->addWidget(ejectButton);
 
     mainLayout->addWidget(deviceLabel);
-    mainLayout->addLayout(selectorRow);
+    mainLayout->addWidget(deviceSelector);
+    mainLayout->addWidget(refreshButton);
     mainLayout->addLayout(buttonsRow);
-
-    refreshButton->setIcon(QIcon::fromTheme(QString("view-refresh")));
 
     deviceLabel->setSizePolicy(QSizePolicy());
     /*
@@ -277,13 +272,13 @@ void PartitionManagerWindow::populateDeviceSelector()
     QListWidgetItem * previous = deviceSelector->currentItem();
     QString previousDev;
     if(previous != nullptr)
-        QString previousDev = previous->text();
+        previousDev = previous->text();
 
     deviceSelector->clear();
     for(auto &devicePath : PartitionManager::findAllDevices())
         deviceSelector->addItem(QString::fromStdString(devicePath));
 
-    auto currentDevice = PartitionManager::currentDevice();
+    std::string currentDevice = PartitionManager::currentDevice();
     if(!currentDevice.empty())
         previousDev = QString::fromStdString(currentDevice);
 

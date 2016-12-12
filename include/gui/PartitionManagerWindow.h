@@ -21,7 +21,7 @@ class PartitionManagerWindow : public QMainWindow
 
     QWidget * centralWidget;
     QLabel          * deviceLabel;
-    QToolButton     * refreshButton;
+    QPushButton     * refreshButton;
     QListWidget     * deviceSelector;
     QPushButton     * wipeButton;
     QPushButton     * createButton;
@@ -29,8 +29,6 @@ class PartitionManagerWindow : public QMainWindow
     QPushButton     * unmountButton;
     QPushButton     * ejectButton;
     QStatusBar      * statusBar;
-
-
 
     QThread pmaThread;
     void setupUI();
