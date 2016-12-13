@@ -40,3 +40,4 @@ CMakeLists.txt.user*
 
 partmgr
 *.log
+*.qm
