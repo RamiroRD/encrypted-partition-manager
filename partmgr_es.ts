@@ -12,7 +12,7 @@
     <message>
         <location filename="src/gui/CreateDialog.cpp" line="27"/>
         <source>Password:</source>
-        <translation>Contraseña</translation>
+        <translation>Contraseña:</translation>
     </message>
 </context>
 <context>
@@ -69,39 +69,49 @@
         <translation>Dispositivo:</translation>
     </message>
     <message>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="19"/>
+        <source>&amp;Refresh</source>
+        <translation>&amp;Actualizar</translation>
+    </message>
+    <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="21"/>
-        <source>Erase device</source>
+        <source>&amp;Erase device</source>
+        <oldsource>Erase device</oldsource>
         <translatorcomment>Borrar disco</translatorcomment>
-        <translation>Borrar dispositivo</translation>
+        <translation>&amp;Borrar dispositivo</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="22"/>
-        <source>Create partition</source>
-        <translation>Crear partición</translation>
+        <source>&amp;Create partition</source>
+        <oldsource>Create partition</oldsource>
+        <translation>&amp;Crear partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="23"/>
-        <source>Mount partition</source>
-        <translation>Montar partición</translation>
+        <source>&amp;Mount partition</source>
+        <oldsource>Mount partition</oldsource>
+        <translation>&amp;Montar partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="24"/>
-        <source>Unmount partition</source>
-        <translation>Desmontar partición</translation>
+        <source>&amp;Unmount partition</source>
+        <oldsource>Unmount partition</oldsource>
+        <translation>&amp;Desmontar partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="25"/>
-        <source>Eject device</source>
+        <source>E&amp;ject device</source>
+        <oldsource>Eject device</oldsource>
         <translatorcomment>Expulsar disco</translatorcomment>
-        <translation>Expulsar dispositivo</translation>
+        <translation>&amp;Expulsar dispositivo</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="44"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="40"/>
         <source>Partition Manager</source>
         <translation>Administrador de particiones</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="79"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="68"/>
         <source>Select a device.</source>
         <translatorcomment>Seleccione un disco.</translatorcomment>
         <translation>Seleccione un dispositivo.</translation>
@@ -137,7 +147,7 @@
         <translation>Buscando partición...</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="251"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="249"/>
         <source>Partition mounted on </source>
         <translation>Partición montada en </translation>
     </message>
@@ -150,20 +160,20 @@
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="164"/>
         <source>Do you want to erase all contents from this device? This can be a lengthy operation.</source>
-        <translation>Desea borrar todo el contenido de este dispositivo? Esto puede tomar varios minutos</translation>
+        <translation>¿Desea borrar todo el contenido de este dispositivo? Esto puede tomar varios minutos.</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="248"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="245"/>
         <source>No device selected.</source>
         <translation>No se seleccionó ningún dispositivo.</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="255"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="254"/>
         <source>No partition mounted.</source>
         <translation>No hay particiones montadas.</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="258"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="257"/>
         <source>Busy...</source>
         <translation>Ocupado...</translation>
     </message>
@@ -171,35 +181,35 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="src/main.cpp" line="28"/>
-        <location filename="src/main.cpp" line="29"/>
+        <location filename="src/main.cpp" line="37"/>
+        <location filename="src/main.cpp" line="38"/>
         <source>Partition Manager</source>
         <translation>Administrador de particiones</translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="34"/>
+        <location filename="src/main.cpp" line="43"/>
         <source>Superuser privileges required.</source>
-        <translation>Se necesitan privilegios de SuperUsuario</translation>
+        <translation>Se necesitan permisos de superusuario.</translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="35"/>
+        <location filename="src/main.cpp" line="44"/>
         <source>This program needs superuser privileges to access storage devices. Please run this program again as root.</source>
-        <translation>Este programa necesita privilegios de Superusuario para acceder a los dispositivos de almacenamiento. Por favor ejecute este programa nuevamente como root.</translation>
+        <translation>Este programa necesita permisos de superusuario para acceder a los dispositivos de almacenamiento. Por favor ejecute este programa nuevamente como root.</translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="42"/>
+        <location filename="src/main.cpp" line="51"/>
         <source>Another instance is open</source>
         <translation>Otra instancia está abierta</translation>
     </message>
     <message>
-        <location filename="src/main.cpp" line="43"/>
+        <location filename="src/main.cpp" line="52"/>
         <source>There is another instance of this program running. Running multiple instances is not supported.</source>
-        <translation>Hay otra instancia de este programa ejecutándose. Ejecutar múltiples instancias no está permitido.</translation>
+        <translation>Hay otra instancia de este programa ejecutándose. La ejecución múltiples instancias no está permitida.</translation>
     </message>
     <message>
-        <location filename="src/gui/PartitionManagerWindow.cpp" line="266"/>
+        <location filename="src/gui/PartitionManagerWindow.cpp" line="265"/>
         <source>An error occurred.</source>
-        <translation>Un error ha ocurrido.</translation>
+        <translation>Ha ocurrido un error.</translation>
     </message>
 </context>
 </TS>
