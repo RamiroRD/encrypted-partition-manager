@@ -6,12 +6,13 @@
     <message>
         <location filename="src/gui/CreateDialog.cpp" line="26"/>
         <source>Offset:</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>(Compensación)</translatorcomment>
+        <translation>Offset</translation>
     </message>
     <message>
         <location filename="src/gui/CreateDialog.cpp" line="27"/>
         <source>Password:</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña</translation>
     </message>
 </context>
 <context>
@@ -21,39 +22,42 @@
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="97"/>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="141"/>
         <source>System call: &quot;</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>System call:</translatorcomment>
+        <translation>Llamada de sistema:</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="41"/>
         <source>Could not open device. It is probably busy or it no longer exists.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Problema al abrir dispositivo.</translatorcomment>
+        <translation>No se pudo abrir el dispositivo. Probablemente el mismo se encuentre ocupado o ya no exista.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="66"/>
         <source>Device wipe failed.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Falló la limpieza del dispositivo</translatorcomment>
+        <translation>Surgió un error en la limpieza del dispositivo</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="94"/>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="138"/>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="169"/>
         <source>An external command failed. Device will be ejected.</source>
-        <translation type="unfinished"></translation>
+        <translation>Un comando externo ha fallado. El dispositivo será expulsado.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="132"/>
         <source>Empty password.</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña vacía.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="135"/>
         <source>No partition found encrypted with this password.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se encontró ninguna partición encriptada con esta contraseña.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerAdapter.cpp" line="167"/>
         <source>Unmount system called failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fallo en la llamada al sistema para desmontar.</translation>
     </message>
 </context>
 <context>
@@ -61,103 +65,107 @@
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="18"/>
         <source>Device:</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Disco:</translatorcomment>
+        <translation>Dispositivo:</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="21"/>
         <source>Erase device</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Borrar disco</translatorcomment>
+        <translation>Borrar dispositivo</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="22"/>
         <source>Create partition</source>
-        <translation type="unfinished"></translation>
+        <translation>Crear partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="23"/>
         <source>Mount partition</source>
-        <translation type="unfinished"></translation>
+        <translation>Montar partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="24"/>
         <source>Unmount partition</source>
-        <translation type="unfinished"></translation>
+        <translation>Desmontar partición</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="25"/>
         <source>Eject device</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Expulsar disco</translatorcomment>
+        <translation>Expulsar dispositivo</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="44"/>
         <source>Partition Manager</source>
-        <translation type="unfinished"></translation>
+        <translation>Administrador de particiones</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="79"/>
         <source>Select a device.</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>Seleccione un disco.</translatorcomment>
+        <translation>Seleccione un dispositivo.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="163"/>
         <source>Confirm</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirmación</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="168"/>
         <source>Erasing volume.</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrando volumen.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="187"/>
         <source>Creating partition...</source>
-        <translation type="unfinished"></translation>
+        <translation>Creando partición...</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="204"/>
         <source>Enter password</source>
-        <translation type="unfinished"></translation>
+        <translation>Ingrese una contraseña</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="205"/>
         <source>Password:</source>
-        <translation type="unfinished"></translation>
+        <translation>Contraseña:</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="209"/>
         <source>Searching partition...</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscando partición...</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="251"/>
         <source>Partition mounted on </source>
-        <translation type="unfinished"></translation>
+        <translation>Partición montada en </translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="168"/>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="209"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="164"/>
         <source>Do you want to erase all contents from this device? This can be a lengthy operation.</source>
-        <translation type="unfinished"></translation>
+        <translation>Desea borrar todo el contenido de este dispositivo? Esto puede tomar varios minutos</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="248"/>
         <source>No device selected.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se seleccionó ningún dispositivo.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="255"/>
         <source>No partition mounted.</source>
-        <translation type="unfinished"></translation>
+        <translation>No hay particiones montadas.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="258"/>
         <source>Busy...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocupado...</translation>
     </message>
 </context>
 <context>
@@ -166,32 +174,32 @@
         <location filename="src/main.cpp" line="28"/>
         <location filename="src/main.cpp" line="29"/>
         <source>Partition Manager</source>
-        <translation type="unfinished"></translation>
+        <translation>Administrador de particiones</translation>
     </message>
     <message>
         <location filename="src/main.cpp" line="34"/>
         <source>Superuser privileges required.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se necesitan privilegios de SuperUsuario</translation>
     </message>
     <message>
         <location filename="src/main.cpp" line="35"/>
         <source>This program needs superuser privileges to access storage devices. Please run this program again as root.</source>
-        <translation type="unfinished"></translation>
+        <translation>Este programa necesita privilegios de Superusuario para acceder a los dispositivos de almacenamiento. Por favor ejecute este programa nuevamente como root.</translation>
     </message>
     <message>
         <location filename="src/main.cpp" line="42"/>
         <source>Another instance is open</source>
-        <translation type="unfinished"></translation>
+        <translation>Otra instancia está abierta</translation>
     </message>
     <message>
         <location filename="src/main.cpp" line="43"/>
         <source>There is another instance of this program running. Running multiple instances is not supported.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hay otra instancia de este programa ejecutándose. Ejecutar múltiples instancias no está permitido.</translation>
     </message>
     <message>
         <location filename="src/gui/PartitionManagerWindow.cpp" line="266"/>
         <source>An error occurred.</source>
-        <translation type="unfinished"></translation>
+        <translation>Un error ha ocurrido.</translation>
     </message>
 </context>
 </TS>
