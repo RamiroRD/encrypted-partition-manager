@@ -29,8 +29,9 @@ int main(int argc, char *argv[])
     a.installTranslator(&qtTranslator);
 
     QTranslator pmTranslator;
-        pmTranslator.load("partmgr_" + QLocale::system().name());
-        a.installTranslator(&pmTranslator);
+    pmTranslator.load("partmgr_" + QLocale::system().name());
+    a.installTranslator(&pmTranslator);
+
 
     a.setApplicationName(QObject::tr("Partition Manager"));
     a.setApplicationDisplayName(QObject::tr("Partition Manager"));
