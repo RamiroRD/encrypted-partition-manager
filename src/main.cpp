@@ -5,7 +5,9 @@
 
 #include <QApplication>
 #include <QTranslator>
+#include <QLibraryInfo>
 #include <QMessageBox>
+
 
 #include "gui/PartitionManagerWindow.h"
 
@@ -20,10 +22,15 @@ bool isProcessUnique()
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QTranslator translator;
 
-    translator.load("partmgr_es");
-    a.installTranslator(&translator);
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(),
+                    QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    a.installTranslator(&qtTranslator);
+
+    QTranslator pmTranslator;
+        pmTranslator.load("partmgr_" + QLocale::system().name());
+        a.installTranslator(&pmTranslator);
 
     a.setApplicationName(QObject::tr("Partition Manager"));
     a.setApplicationDisplayName(QObject::tr("Partition Manager"));
