@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Administrador de particiones
+Exec=sudo /usr/bin/partmgr
+Terminal=false
+Type=Application
+Categories=Utility;Application;
