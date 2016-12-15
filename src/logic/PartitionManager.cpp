@@ -256,12 +256,13 @@ bool PartitionManager::mountPartition(const std::string &password)
     std::vector<char> header(512);
     bool found = false;
     unsigned short successfulSlot;
+	lseek64(fd,0,SEEK_CUR);
     for (unsigned short i = 0; i < SLOTS_AMOUNT; i++)
     {
         if(mOperationCanceled)  
             break;
 
-        lseek(fd,i*mOffsetMultiple*BLOCK_SIZE_,SEEK_SET);
+        lseek64(fd,mOffsetMultiple*BLOCK_SIZE_,SEEK_CUR);
         read(fd,header.data(),512);
 
         std::vector<char> decryptedHeader = mCrypto.decryptMessage(header,password);
