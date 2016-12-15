@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Administrador de particiones
-Exec=gksu /usr/bin/partmgr
+Exec=sudo /usr/bin/partmgr
 Terminal=false
 Type=Application
 Categories=Utility;Application;
