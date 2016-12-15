@@ -187,6 +187,14 @@ void PartitionManagerAdapter::abortOperation()
         pm->abortOperation();
 }
 
+uint64_t PartitionManagerAdapter::currentDeviceSize()
+{
+    if(pm)
+        return pm->currentDeviceSize();
+    else
+        throw std::logic_error("Device not open!");
+}
+
 void PartitionManagerAdapter::changeState(State state)
 {
     emit stateChanged(currentState=state);

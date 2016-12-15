@@ -31,6 +31,7 @@ class PartitionManagerAdapter : public QObject
 public:
     explicit PartitionManagerAdapter(QObject *parent = 0);
     void pollProgress();
+    uint64_t currentDeviceSize();
 signals:
     void stateChanged(const State state);
     void finished();
