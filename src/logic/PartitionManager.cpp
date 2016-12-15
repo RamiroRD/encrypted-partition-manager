@@ -438,7 +438,10 @@ void PartitionManager::unmountAll()
             if(umount(mountpoint.c_str()) == 0)
                 std::cerr << mountpoint << " unmounted." << std::endl;
             else
+			{
                 std::cerr << "Failed to unmount " << mountpoint << "." << std::endl;
+				perror("");
+			}
         }
     }
 }
