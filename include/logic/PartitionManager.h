@@ -174,6 +174,16 @@ public:
     void abortOperation();
 
     /*
+     * currentDeviceSize
+     *
+     * Devuelve el tamaño en sectores de 512 bytes del disco con el que fue
+     * creado el objeto.
+     *
+     * Este método se puede llamar concurrentemente.
+     */
+    uint64_t currentDeviceSize();
+
+    /*
      * ejectDevice:
      *
      * Si se llama este método en cualquier momento, el se cierra el
@@ -203,10 +213,9 @@ public:
     static const std::string ENCRYPTED;
     static const std::string MOUNTPOINT;
 private:
-    // Ambos en bloques 
-    uint64_t                       mDeviceSize;
-    uint64_t                       mOffsetMultiple;
     std::string                 mCurrentDevice;
+    uint64_t                    mDeviceSize;
+    uint64_t                    mOffsetMultiple;
     std::atomic<unsigned short> mProgress;
     std::atomic<bool>           mOperationCanceled;
     std::mutex                  mGuard;

@@ -35,49 +35,21 @@ static bool fileExists(const std::string &path)
 }
 
 PartitionManager::PartitionManager(const std::string &device)
-    : mDeviceSize(0),
-      mOffsetMultiple(0),
-      mCurrentDevice(device),
+    : mCurrentDevice(device),
+      mDeviceSize(currentDeviceSize()/BLOCK_SIZE_),
+      mOffsetMultiple(mDeviceSize / SLOTS_AMOUNT),
       mProgress(0),
       mOperationCanceled(false),
       mCloseAtDestroy(false),
       mCrypto()
 {
-    /*
-     * Verificamos que el dispositivo exista. Si no existe, entonces se levanta
-     * una excepción que debería manejarse desde el caller del constructor.
-     */
      unmountAll();
-     int fd = open(device.c_str(),O_RDWR);
 
-     if(fd == -1)
-     {
-        perror("");
-        if(errno == ENOENT)
-            throw std::domain_error("No such device.");
-        else if (errno == EPERM || errno == EACCES)
-            throw std::runtime_error("Permission denied.");
-        else
-            throw std::runtime_error("Unknown error when opening device block file.");
-     }else{
-        unsigned long long size;
-        if(fstat(fd,&mFileStat) == -1)
-            throw SysCallError("stat", errno);
 
-        if(!S_ISBLK(mFileStat.st_mode))
-            throw std::domain_error("Not a block file!");
-        if(ioctl(fd, BLKGETSIZE64, &size)==-1)
-            throw SysCallError("ioctl BLKGETSIZE64",errno);
-
-        mDeviceSize = size/BLOCK_SIZE_;
-        mOffsetMultiple = mDeviceSize / SLOTS_AMOUNT;
-        std::cerr << device << " has " << mDeviceSize << " blocks."
-                << std::endl;
-        std::cerr << "major " << major(mFileStat.st_rdev) << std::endl;
-        std::cerr << "minor " << minor(mFileStat.st_rdev) << std::endl;
-     }
-    close(fd);
-
+     std::cerr << device << " has " << mDeviceSize << " blocks."
+             << std::endl;
+     std::cerr << "major " << major(mFileStat.st_rdev) << std::endl;
+     std::cerr << "minor " << minor(mFileStat.st_rdev) << std::endl;
 
 
     /*
@@ -468,6 +440,33 @@ void PartitionManager::unmountAll()
             else
                 std::cerr << "Failed to unmount " << mountpoint << "." << std::endl;
         }
+    }
+}
+
+uint64_t PartitionManager::currentDeviceSize()
+{
+    int fd = open(mCurrentDevice.c_str(),O_RDWR);
+
+    if(fd == -1)
+    {
+       perror("");
+       if(errno == ENOENT)
+           throw std::domain_error("No such device.");
+       else if (errno == EPERM || errno == EACCES)
+           throw std::runtime_error("Permission denied.");
+       else
+           throw std::runtime_error("Unknown error when opening device block file.");
+    }else{
+       unsigned long long size;
+       if(fstat(fd,&mFileStat) == -1)
+           throw SysCallError("stat", errno);
+
+       if(!S_ISBLK(mFileStat.st_mode))
+           throw std::domain_error("Not a block file!");
+       if(ioctl(fd, BLKGETSIZE64, &size)==-1)
+           throw SysCallError("ioctl BLKGETSIZE64",errno);
+       close(fd);
+       return size;
     }
 }
 
