@@ -37,7 +37,7 @@ static bool fileExists(const std::string &path)
 PartitionManager::PartitionManager(const std::string &device)
     : mCurrentDevice(device),
       mDeviceSize(currentDeviceSize()/BLOCK_SIZE_),
-      mOffsetMultiple(mDeviceSize / SLOTS_AMOUNT),
+      mOffsetMultiple(mDeviceSize/ SLOTS_AMOUNT),
       mProgress(0),
       mOperationCanceled(false),
       mCloseAtDestroy(false),
@@ -228,7 +228,10 @@ bool PartitionManager::createPartition(const unsigned short slot,
         throw CommandError(cmd);
     std::cerr << "FAT filesystem created." << std::endl;
     if(!callMount())
+    {
+        perror("");
         throw SysCallError("mount",errno);
+    }
     std::cerr << "Filesystem mounted." << std::endl;
 
     return true;
@@ -256,14 +259,14 @@ bool PartitionManager::mountPartition(const std::string &password)
     std::vector<char> header(512);
     bool found = false;
     unsigned short successfulSlot;
-	lseek64(fd,0,SEEK_CUR);
     for (unsigned short i = 0; i < SLOTS_AMOUNT; i++)
     {
         if(mOperationCanceled)  
             break;
 
-        lseek64(fd,mOffsetMultiple*BLOCK_SIZE_,SEEK_CUR);
+
         read(fd,header.data(),512);
+        lseek64(fd,i*mOffsetMultiple*BLOCK_SIZE_,SEEK_SET);
 
         std::vector<char> decryptedHeader = mCrypto.decryptMessage(header,password);
         if(decryptedHeader[510] == (char) 0x55 &&

@@ -214,6 +214,7 @@ public:
     static const std::string MOUNTPOINT;
 private:
     std::string                 mCurrentDevice;
+    // ambos en bloques
     uint64_t                    mDeviceSize;
     uint64_t                    mOffsetMultiple;
     std::atomic<unsigned short> mProgress;
