@@ -24,11 +24,11 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     QTranslator qtTranslator;
-    qtTranslator.load("qt_es");
+    qtTranslator.load("qt_es","/usr/share/qt4/translations");
     a.installTranslator(&qtTranslator);
 
     QTranslator pmTranslator;
-    pmTranslator.load("partmgr_es");
+    pmTranslator.load("partmgr_es","/usr/bin");
     a.installTranslator(&pmTranslator);
 
 
