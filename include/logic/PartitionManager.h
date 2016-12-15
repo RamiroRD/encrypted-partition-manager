@@ -91,9 +91,9 @@ public:
     /*
      * wipeDevice:
      *
-     * Rellena el archivo de bloque con información aleatoria extraída de
-     * /dev/urandom. Si se llama abortOperation() concurrentemente antes o
-     * durante la ejecución de este método, la escritura se detiene.
+     * Rellena el archivo de bloque con información aleatoria. Si se llama 
+	 * abortOperation() antes o durante la ejecución de este método,
+     * la escritura se detiene.
      *
      * Siempre antes de llamar a este método, es necesario llamar a
      * resetProgress(). Si no se hace esto, no hay garantía de que el borrado
@@ -113,7 +113,7 @@ public:
      *
      * Retorna verdadero si crea exitosamente el filesystem y falso si ya hay
      * una partición montada, slot está fuera del rango [0,SLOTS_AMOUNT), si la
-     * contraseña es un string vacío o si algún comando interno falla.
+     * contraseña es un string vacío o si algún comando externo falla.
      */
     bool createPartition(const unsigned short slot,
                          const std::string &password);
