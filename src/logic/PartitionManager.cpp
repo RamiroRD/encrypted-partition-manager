@@ -36,14 +36,15 @@ static bool fileExists(const std::string &path)
 
 PartitionManager::PartitionManager(const std::string &device)
     : mCurrentDevice(device),
-      mDeviceSize(currentDeviceSize()/BLOCK_SIZE_),
-      mOffsetMultiple(mDeviceSize/ SLOTS_AMOUNT),
       mProgress(0),
       mOperationCanceled(false),
       mCloseAtDestroy(false),
       mCrypto()
 {
      unmountAll();
+
+     mDeviceSize = currentDeviceSize()/BLOCK_SIZE_;
+     mOffsetMultiple = mDeviceSize/SLOTS_AMOUNT;
 
 
      std::cerr << device << " has " << mDeviceSize << " blocks."
@@ -264,9 +265,9 @@ bool PartitionManager::mountPartition(const std::string &password)
         if(mOperationCanceled)  
             break;
 
-
-        read(fd,header.data(),512);
         lseek64(fd,i*mOffsetMultiple*BLOCK_SIZE_,SEEK_SET);
+        read(fd,header.data(),512);
+
 
         std::vector<char> decryptedHeader = mCrypto.decryptMessage(header,password);
         if(decryptedHeader[510] == (char) 0x55 &&
@@ -293,7 +294,9 @@ bool PartitionManager::mountPartition(const std::string &password)
             return true;
         }
         else
+        {
             throw SysCallError("mount");
+        }
     }else
     {
         std::cerr << "FAT signature not found." << std::endl;
